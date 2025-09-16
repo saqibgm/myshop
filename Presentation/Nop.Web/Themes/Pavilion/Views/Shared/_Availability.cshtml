@@ -1,0 +1,65 @@
+﻿@model ProductDetailsModel
+@using Nop.Core.Domain.Customers
+@inject Nop.Core.IWorkContext workContext
+@{
+    var newStockComingLong = T("Admin.Catalog.Products.NewStockComingLong").Text;
+
+}
+<style>
+    .dot {
+        height: 20px;
+        width: 20px;
+        border-radius: 50%;
+        display: inline-block;
+        vertical-align: bottom;
+        margin-left: 5px;
+    }
+
+        .dot.g {
+            background-color: green;
+        }
+
+        .dot.r {
+            background-color: red;
+        }
+
+        .dot.y {
+            background-color: yellow;
+        }
+</style>
+@if (workContext.CurrentCustomer.IsRegistered() && !string.IsNullOrWhiteSpace(Model.StockAvailability) || Model.DisplayBackInStockSubscription)
+{
+    var stockColor = "while";
+    var stockStatus = "";
+    @if (string.IsNullOrWhiteSpace(Model.StockAvailability) || (Model.StockQuantity.HasValue && Model.StockQuantity <= 0))
+    {
+        stockColor = "r";
+        stockStatus = T("Products.Availability.OutOfStock").Text;
+    }
+    else if (Model.StockQuantity.HasValue && Model.StockLowQuantity.HasValue && Model.StockQuantity <= Model.StockLowQuantity)
+    {
+        stockColor = "y";
+        stockStatus = T("Products.Availability.LowInStock").Text;
+    }
+    else if (Model.StockQuantity.HasValue && Model.StockLowQuantity.HasValue && Model.StockQuantity > Model.StockLowQuantity)
+    {
+        stockColor = "g";
+        stockStatus = T("Products.Availability.AvailableInStock").Text;
+    }
+    <div class="availability">
+        <div class="stock">
+            <span class="label">@T("Products.Availability"):</span>
+            <span class="value" id="stock-availability-value-@Model.Id">@stockStatus </span><span class="dot @stockColor"></span>
+        </div>
+        @if (Model.StockQuantity.HasValue && Model.StockQuantity <= 0 && (Model.NewStockComing.HasValue && Model.NewStockComing > 0))
+        {
+
+            <span class="value" style="color:green;font-weight:bold;font-size:large" id="stock-newstockcoming-value-@Model.Id">@newStockComingLong </span>
+        }
+        else
+        {
+            @await Html.PartialAsync("_BackInStockSubscription", Model)
+        }
+    </div>
+
+}

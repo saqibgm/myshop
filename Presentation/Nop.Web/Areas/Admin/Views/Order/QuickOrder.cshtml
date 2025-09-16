@@ -1,0 +1,656 @@
+@model OrderModel
+@using Nop.Core.Domain.Customers;
+@using Nop.Core
+@inject IWorkContext workContext;
+@{
+    var currentCustomer = workContext.CurrentCustomer;
+    // Test
+}
+@inject AdminAreaSettings adminAreaSettings
+
+@{
+    //page title
+    ViewBag.Title = T("Admin.QuickOrder").Text;
+    //active menu item (system name)
+    Html.SetActiveMenuItemSystemName("Quick Order");
+}
+
+<style>
+
+    input[type="text"].k-input {
+        width: 50px;
+    }
+
+    .k-grid tbody .k-button {
+        min-width: 25px;
+        width: 36px;
+    }
+
+    .ui-autocomplete {
+        max-height: 200px;
+        max-width: 400px;
+        overflow-y: auto;
+        font-size: 11px;
+        /* prevent horizontal scrollbar */
+        overflow-x: hidden;
+        /* add padding to account for vertical scrollbar */
+        padding-right: 5px;
+        white-space: nowrap;
+    }
+
+    .k-list {
+        white-space: nowrap;
+    }
+</style>
+<form asp-controller="Order" asp-action="QuickOrderSubmit" method="post">
+    <div class="content-header clearfix">
+        <h1 class="pull-left">
+            @T("Admin.QuickOrder")
+        </h1>
+        @if (Model.Id > 0)
+        {
+            <div class="pull-right">
+                <a asp-action="Edit" asp-route-Id="@Model.Id" class="btn bg-blue">
+                    @T("Admin.Orders.EditOrderDetails")
+                </a>
+            </div>
+        }
+    </div>
+    @*//******************************************************** Quick Order Page Controls***************************************************@
+    <div class="content">
+        <div class="form-horizontal">
+            <div class="panel-group">
+                <div class="panel panel-default panel-search">
+                    <div class="panel-body">
+
+                        <div class="search-body">
+                            <div class="panel-body">
+                                <div class="row">
+                                    @*...Date Invoice.....*@
+                                    @if (Model.DateInvoiceEnabled)
+                                    {
+                                        <div class="form-group row col-md-6">
+                                            <div class="col-md-4">
+                                                <nop-label asp-for="DateInvoice" />
+                                            </div>
+                                            <div class="col-md-8">
+                                                <nop-editor asp-for="DateInvoice" asp-value="@Model.CreatedOn" />
+                                                <span asp-validation-for="DateInvoice"></span>
+
+                                            </div>
+                                        </div>
+                                    }
+                                    @*...Price Group.....*@
+                                    @*...Price Group.....*@
+                                    <div class="form-group row col-md-6">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="OrderStatusId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="OrderStatusId" asp-items="Model.AvailableOrderStatuses" />
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="row">
+                                    @*...Saleman.....*@
+                                    <div class="form-group row col-md-6">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SalemanId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SalemanId" asp-items="Model.SalemanList" />
+                                        </div>
+                                    </div>
+                                    @*...Customer.....*@
+                                    <div class="form-group row col-md-6">
+                                        <div class="col-md-4">
+                                            <label id="lbllist"></label>
+                                            <nop-label asp-for="CustomerId" />
+                                            <div style="display:none">
+                                                <nop-editor asp-for="CustomerId" />
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <input id="CustomerName" class="form-control valid">
+                                        </div>
+                                        <div class="col-md-2" style="vertical-align:central">
+                                            <button type="submit" id="btnVerify" name="btnVerify"  style="display:none;vertical-align:central" class="btn btn-primary bg-blue text-bold"> @T("Customer.VerifyVat").Text </button>
+                                            <i id="vatVerified" class="fa fa-check true-icon" style="display:none;padding-top: 7px" nop-value="true"></i>
+                                            <i id="vatNotVerified" class="fa fa-close false-icon" style="display:none;padding-top: 7px;" nop-value="false"></i>
+                                            <div id="ajaxVatBusy" style="display: none;"><span>&nbsp;</span></div>
+                                        </div>
+                                        <script>
+
+                                            $(document).ready(function () {
+                                                $('#btnVerify').on('click', function (e) {
+                                                    $('#btnVerify').hide();
+                                                    $.ajax({
+                                                        type: 'GET',
+                                                        url: '@Url.Action("IsVatNoValid", "Customer")',
+                                                        dataType: 'json',
+                                                        data: { customerId: $("#CustomerId").val() },
+                                                        success: function (result) {
+                                                            SetVatButton(result);
+                                                        }
+                                                    });
+                                                    return false;
+                                                });
+                                            });
+                                            function SetVatButton(verified) {
+                                                if ($("#CustomerId").val() == "") {
+                                                    $('#btnVerify').hide();
+                                                    $('#vatVerified').hide();
+                                                    $('#vatNotVerified').hide();
+                                                }else  if (verified == true) {
+                                                    $('#btnVerify').hide();
+                                                    $('#vatVerified').show();
+                                                    $('#vatNotVerified').hide();
+                                                } else if (verified == false) {
+                                                    $('#btnVerify').hide();
+                                                    $('#vatVerified').hide();
+                                                    $('#vatNotVerified').show();
+                                                }
+                                                else {
+                                                    $('#btnVerify').show();
+                                                    $('#vatVerified').hide();
+                                                    $('#vatNotVerified').hide();
+                                                }
+                                            }
+
+                                        </script>
+                                    </div>
+
+                                    <script type="text/javascript" language="javascript">
+                                        var customersList;
+                                        function GetProducts() {
+                                            $.ajax({
+                                                type: 'GET',
+                                                url: '@Url.Action("ProductGetAllWithLastPrice", "Order")',
+                                                dataType: 'json',
+                                                data: { customerId: $("#CustomerId").val() },
+                                                success: function (data) {
+                                                    productsItems = data;
+                                                }
+                                            });
+                                        }
+                                        function GetAddresses() {
+                                            $.ajax({
+                                                type: 'GET',
+                                                url: '@Url.Action("GetAddresses", "Customer")',
+                                                dataType: 'json',
+                                                data: { customerId: $("#CustomerId").val(), addressId: @Model.ShippingAddressId},
+                                                success: function (result) {
+                                                    $("#ShippingAddressId option").remove();
+                                                    if (result != null && result != undefined) {
+                                                        var $dropdown = $("#ShippingAddressId");
+                                                        $.each(result, function () {
+                                                            $dropdown.append($("<option />").val(this.Id).text(this.Address + ", " + this.Zip + ", " + this.City + ", " + this.Country));
+                                                        });
+                                                    }
+                                                    if (@Model.ShippingAddressId > 0) {
+                                                        $("#ShippingAddressId").val(@Model.ShippingAddressId);
+                                                    }
+                                                }
+                                            });
+                                        }
+                                        $(document).ready(function () {
+                                            kendo.culture("de-DE");
+                                            customersList = @Html.Raw(Json.Serialize(Model.CustomersList));
+                                            $("#SalemanId").val(0);
+                                            var selected = customersList.filter(p => p.Value == $("#CustomerId").val())
+                                            if (selected.length > 0) {
+                                                $("#CustomerName").val(selected[0].Text);
+                                            } else if (customersList.length > 0 && (@Model.CustomerId== '' || @Model.CustomerId== 0)) {
+                                                //$("#CustomerId").val(customersList[0].Value);
+                                                //$("#CustomerName").val(customersList[0].Text);
+                                            } else {
+                                                $("#CustomerId").val('');
+                                            }
+
+                                            var selectedSalesman = @Model.SalemanId;
+                                            if (selectedSalesman != undefined && selectedSalesman > 0) {
+                                                $("#SalemanId").val(selectedSalesman);
+                                            } else if (selected.length > 0) {
+                                                $("#SalemanId").val(selected[0].SalemanId);
+                                            }
+                                            $("#CustomerName").autocomplete({
+                                                minLength: 0,
+                                                source: $.map(customersList, function (item) {
+                                                    var found = customersList.filter(p => p.Value == $("#CustomerId").val())
+                                                    if (!found) $("#CustomerId").val('');
+                                                    return { label: item.Text, value: item.Value }; //updated code
+                                                }),
+                                                select: function (event, ui) {
+                                                    $("#SalemanId").val(0);
+                                                    $("#CustomerId").val(ui.item.value);
+                                                    $("#CustomerName").val(ui.item.label);
+                                                    var found = customersList.filter(p => p.Value == ui.item.value)
+                                                    if (found.length > 0) {
+                                                        $("#SalemanId").val(found[0].SalemanId);
+                                                    }
+                                                    GetProducts();
+                                                    GetAddresses();
+                                                    SetVatButton(null);
+                                                    return false;
+                                                }
+                                            }).focus(function () {
+                                                $(this).autocomplete("search", "");
+                                            }).keyup(function (e) {
+                                                if (e.which == 13) {
+                                                    var found = customersList.filter(p => p.Text == $("#CustomerName").val());
+                                                    $("#CustomerId").val(found.length > 0 ? found[0].Value : '');
+                                                }
+                                            });
+                                        });
+                                    </script>
+                                </div>
+                                <div class="row">
+                                    @*...Status.....*@
+
+                                    @*...Packing Tupe.....*@
+                                    <div class="form-group row col-md-6">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="Remarks" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="Remarks" />
+                                            <span asp-validation-for="Remarks"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row col-md-6">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="ReferneceNo" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="ReferneceNo" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    @*...Status.....*@
+
+                                    @*...Packing Tupe.....*@
+                                    <div class="form-group row col-md-6">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="ShippingAddressId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="ShippingAddressId" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row col-md-6">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="CustomShippingCharges" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="CustomShippingCharges" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    @*...Status.....*@
+
+                                    @*...Packing Tupe.....*@
+                                    <div class="form-group row col-md-6">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="PaymentTermId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="PaymentTermId" asp-items="Model.AvailablePaymentTerms" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group row col-md-6">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="PaymentMethod" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="PaymentMethod" asp-items="Model.PaymentMethodList" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                @******************NEW Grid***********@
+                <div class="panel panel-default">
+                    <input type="hidden" id="Id" name="Id" value="@Model.Id" />
+                    <input type="hidden" id="OrderGuid" name="OrderGuid" value="@Model.OrderGuid" />
+                    <div class="panel-body">
+                        <div id="QuickOrderGrid"></div>
+
+                        <script>
+                            // var oGrid = $("#QuickOrderGrid").data("kendoGrid");
+                            var productsItems;
+                            //**************************************Getting one time all products on page, so next every time can be used for
+                            $(document).ready(function () {
+                                $("#CustomShippingCharges").rules("remove", "required");
+                                if ($("#CustomerId").val() != '') {
+                                    GetProducts();
+                                    GetAddresses();
+                                }
+
+                                var dataSource = new kendo.data.DataSource({
+                                    pageSize: 100,
+                                    // autoSync: true,
+                                    transport: {
+                                        read: {
+                                            contentType: "application/json",
+                                            url: '@Url.Action("GetOrderItemWithLastPrice", "Order")',
+                                            dataType: "json",
+                                            data: { customerId: $("#CustomerId").val(), Id: @Model.Id, cart: @Model.cart},
+                                        },
+                                        update: {
+                                            contentType: "application/json",
+                                            dataType: "json",
+                                            url: '@Url.Action("OrderItemUpdate", "Order")',
+                                            data: {},
+                                            complete: function (e) {
+                                                $("#QuickOrderGrid").data("kendoGrid").dataSource.read();
+                                            }
+                                        },
+                                        destroy: {
+                                            //url: crudServiceBaseUrl + "/Products/Destroy",
+                                            contentType: "application/json",
+                                            dataType: "json",
+                                            url: '@Url.Action("OrderItemDelete", "Order")',
+                                            data: {},
+                                            complete: function (e) {
+                                                $("#QuickOrderGrid").data("kendoGrid").dataSource.read();
+                                            }
+                                        },
+                                        create: {
+                                            contentType: "application/json",
+                                            dataType: "json",
+                                            url: '@Url.Action("OrderItemAdd", "Order")',
+                                            data: {},
+                                        }
+
+                                    },
+                                    //   batch: true,
+                                    schema: {
+                                        model: {
+                                            id: "ProductId",
+                                            fields: {
+                                                ProductId: { type: "number", editable: false, nullable: true },
+                                                //isNew: { type: "number", nullable: true },
+                                                ProductName: { type: "string" },
+                                                Sku: { type: "string", editable: false },
+                                                StockQuantity: { type: "number", editable: false },
+                                                NewStockComing: { type: "number", editable: false },
+                                                Quantity: { type: "number", validation: { required: true, min: 1 } },
+                                                PurchasePrice: { type: "number", editable: false, validation: { required: false, min: 0 } },
+                                                LastPrice: { type: "number", editable: false, validation: { required: false, min: 0 } },
+                                                MinPrice: { type: "number", editable: false, validation: { required: true, min: 0 } },
+                                                UnitPriceExclTax: { type: "number", editable: true, validation: { required: true, min: 0 }, Attr: { class: "PriceChanged" } },
+                                                DiscountExclTax: { type: "number", editable: false, validation: { required: false, min: 0 } },
+                                                Profit: { type: "string", editable: false },
+                                                TotalExclTax: { type: "number", editable: false, validation: { required: false, min: 0 } },
+                                                TotalInclTax: { type: "number", editable: false, nullable: true },
+                                            }
+                                        }
+                                    },
+                                    error: function (e) {
+                                        alert(e.responseText);
+                                    },
+                                    // ,
+                                    change: function (e) {
+                                        kendo.culture("de-DE");
+                                        var model = e.items[0];
+
+                                        if (e.action === "itemchange" && e.field == "UnitPriceExclTax") {
+                                            model.TotalExclTax = (model.Quantity * model.UnitPriceExclTax).toFixed(2);
+                                            model.TotalInclTax = (model.Quantity * model.UnitPriceInclTaxValue).toFixed(2);
+
+                                            $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(12)").html(model.TotalExclTax);
+                                            $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(12)").val(model.TotalExclTax);
+                                            // Apply Check for Unitprice should be less than or equal to Old Price
+                            @*if (!(@currentCustomer.IsAdmin().ToString().ToLower()) && UnitPriceExclTax < MinPrice) {
+                                                alert('@T("Admin.QuickOrder.Price.MinimumLimitError").Text');
+                                                UnitPriceExclTax = model.MinPrice;
+                                                $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(8)").find('input[type="text"]').val(Number(model.MinPrice));
+                                                model.Profit =calculateProfit(model.uid, model.PurchasePrice, UnitPriceExclTax);
+                                                e.preventDefault();
+                                                return false;
+                                                }*@
+                                                model.Profit = calculateProfit(model.uid, model.PurchasePrice, model.UnitPriceExclTax);
+
+                                            //  alert(UnitPriceExclTax);
+
+                                        }
+                                        else if (e.action === "itemchange" && (e.field === "Quantity" || e.field === "UnitPriceExclTax")) {
+                                            //  var product = productsItems.filter(element => element.ProductId == model.ProductId)
+                                            model.Profit = calculateProfit(model.uid, model.PurchasePrice, model.UnitPriceExclTax)
+
+                                            model.TotalExclTax = (model.Quantity * model.UnitPriceExclTax).toFixed(2);
+                                            model.TotalInclTax = (model.Quantity * model.UnitPriceInclTaxValue).toFixed(2);
+                                            $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(12)").html(model.TotalExclTax);
+                                            $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(12)").val(model.TotalExclTax);
+                                        }
+                                        else if (e.action === "itemchange" && e.field == "ProductName") {
+                                            model.ProductId = model.ProductName;
+                                            var product = productsItems.filter(element => element.ProductId == model.ProductId)
+                                            model.ProductName = product[0].ProductName;
+                                            model.Sku = product[0].Sku;
+                                            model.StockQuantity = product[0].StockQuantity;
+                                            model.UnitPriceExclTax = product[0].Price;
+                                            model.PurchasePrice = product[0].PurchasePrice;
+                                            model.MinPrice = product[0].MinPrice;
+                                            model.LastPrice = product[0].LastPrice;
+                                            model.NewStockComing = product[0].NewStockComing;
+                                            $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(1)").html(product[0].ProductName);
+                                            $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(1)").val(product[0].ProductName);
+                                            $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(2)").html(product[0].Sku);
+                                            $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(2)").val(product[0].Sku);
+                                            $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(3)").html(product[0].StockQuantity);
+                                            $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(3)").val(product[0].StockQuantity);
+                                            $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(5)").html(model.NewStockComing);
+                                            $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(5)").val(model.NewStockComing);
+                                            $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(6)").html(product[0].PurchasePrice);
+                                            $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(6)").val(product[0].PurchasePrice);
+                                            $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(7)").html(product[0].LastPrice);
+                                            $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(7)").val(product[0].LastPrice);
+
+                                            $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(8)").html(product[0].MinPrice);
+                                            $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(8)").val(product[0].MinPrice);
+
+
+                                            //  var txtPric = $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(6)");
+                                            //  txtPric.val(Number(model.UnitPriceExclTax));
+                                            //$("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(7)").val(Number(model.UnitPriceExclTax));
+                                            //$("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(7)").html(Number(model.UnitPriceExclTax));
+                                            let curr = new Intl.NumberFormat('de-DE', { maximumSignificantDigits: 2 });
+                                            $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(9)").find('input[type="text"]').val(curr.format(model.UnitPriceExclTax));
+                                            // oGrid.editCell(oGrid.tbody.find("tr[data-uid='" + model.uid + "'] td:eq(6)").find("td").eq(6));
+                                            model.Profit = calculateProfit(model.uid, model.PurchasePrice, model.UnitPriceExclTax);
+                                            $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(10)").find('input[type="text"]').val(curr.format(model.UnitPriceInclTaxValuoe));
+                                        }
+                                    },
+                                    aggregate: [{ field: "ProductName", aggregate: "count" },
+                                    { field: "TotalExclTax", aggregate: "sum" },
+                                    { field: "Quantity", aggregate: "sum" },
+                                    { field: "DiscountExclTax", aggregate: "sum" }
+                                    ]
+                                });
+
+                            @************************************* Quick Order Item Grid*******************************@
+
+                                    $("#QuickOrderGrid").kendoGrid({
+                                        dataSource: dataSource,
+                                        pageable: true,
+                                        culture: "de-DE",
+                                        height: 425,
+                                        toolbar: [{ name: "create", text: '@T("Admin.Orders.Fields.ProductItem").Text' }],
+                                        columns: [
+                                            { field: "ProductId", width: "0%", hidden: true },
+                                            { field: "ProductName", title: '@T("Admin.Orders.Fields.ProductItem").Text', width: "21%", editor: productEditorDropdown, aggregates: ["count"], footerTemplate: "Items: #=count#", groupFooterTemplate: "Items : #=count#" },
+                                            { field: "Sku", title: '@T("Products.Sku").Text', width: "8%" },
+                                            { field: "StockQuantity", title: '@T("Admin.Catalog.Products.Fields.StockQuantity").Text', width: "5%", format: "{0:n0}" },
+                                            { field: "Quantity", title: '@T("Admin.Orders.Fields.Qty").Text', width: "5%", format: "{0:n0}", aggregates: ["sum"], footerTemplate: "Total Qty: #=sum#", groupFooterTemplate: "Total Qty : #=sum#" },
+                                            { field: "NewStockComing", title: '@T("Admin.Catalog.Products.Fields.NewStockComing").Text', width: "5%", template: discTemplate },
+                                            { field: "PurchasePrice", title: '@T("admin.configuration.settings.producteditor.productcost").Text', width: "5%", format: "{0:n2}" },
+                                            { field: "LastPrice", title: '@T("Admin.Catalog.Products.Fields.LastPrice").Text', width: "5%", format: "{0:n2}" },
+                                            { field: "MinPrice", title: '@T("Admin.Catalog.Products.Fields.MinPrice").Text', width: "4%", format: "{0:n2}" },
+                                            { field: "UnitPriceExclTax", title: '@T("Admin.Orders.Fields.QuickOrderPrice").Text', width: "4%", format: "{0:n2}", class: "PriceChanged" },
+                                            { field: "DiscountExclTax", title: '@T("Admin.Orders.Fields.QuickOrderDiscount").Text', width: "0%", hidden: true, format: "{0:n2}", aggregates: ["sum"], footerTemplate: "Total : #=sum#", groupFooterTemplate: "Total: #=sum#" },
+                                            { field: "Profit", title: '% @T("Admin.Orders.Fields.Profit").Text', width: "4%" },
+                                            { field: "TotalExclTax", title: '@T("Admin.Orders.Fields.Total").Text', width: "4%", format: "{0:n2}", editable: false, aggregates: ["sum"], footerTemplate: "TotalExclTax : #=sum#", groupFooterTemplate: "Total: #=sum#" },
+                                            { field: "TotalInclTax", width: "0%", hidden: true },
+                                            { command: [{ name: "edit", text: { edit: " ", update: " ", cancel: " " } }, { name: "destroy", text: " " }], title: '@T("Admin.Orders.Fields.QuickOrderAction").Text', width: "7%" },
+
+                                        ],
+                                        databound: function (e) {
+                                            //console.log("dataBound", e);  //Not firing
+                                        },
+                                        dataBinding: function (e) {
+
+                                            // console.log("dataBinding",e); //Firing
+
+                                        },
+                                        save: function (e) {
+                                            //console.log(e);
+                                            var model = e.model;
+                                            var UnitPriceExclTax = model.UnitPriceExclTax;
+                                            var MinPrice = model.MinPrice;
+                                            // Grid Data Source
+                                            var dataSource = $("#QuickOrderGrid").data("kendoGrid").dataSource;
+
+                                            // Gets the full set of data from the data source
+                                            var allData = dataSource.data();
+                                            //console.log(allData);
+                                            // Detect Duplicate
+                                            const prdcts = allData.filter(row => row.ProductId == model.ProductId);
+
+                                            if (prdcts.length > 1) {
+                                                alert('@T("Admin.QuickOrder.DuplicateProduct").Text');
+                                                e.preventDefault();
+                                            }// if (product != null) {
+
+                            @*if (!(@currentCustomer.IsAdmin().ToString().ToLower()) && UnitPriceExclTax < MinPrice && MinPrice > 0) {
+                                                $("#QuickOrderGrid").find("tr[data-uid='" + model.uid + "'] td:eq(8)").find('input[type="text"]').val(Number(model.MinPrice));
+                                                alert('@T("Admin.QuickOrder.Price.MinimumLimitError").Text');
+                                                e.preventDefault();
+                                                }*@
+
+                                                                                                                                                                                                                                                                                                    //calculateProfit(model.uid, model.PurchasePrice, model.UnitPriceExclTax);
+                                                                                                                                                                                                                                                                                                },
+                                        edit: function (e) {
+                                            if (!e.model.isNew()) {
+                                                var combo = e.container.find("input[name=ProductName]").data("kendoComboBox");
+                                                combo.enable(false);
+                                            }
+                                            var model = e.model;
+                                            //calculateProfit(model.uid, model.PurchasePrice, model.UnitPriceExclTax);
+                                        },
+                                        dataBound: function (e) {
+                                            var data = this.dataSource.view();
+                                            for (var i = 0; i < data.length; i++) {
+                                                var model = data[i];
+                                                calculateProfit(model.uid, model.PurchasePrice, model.UnitPriceExclTax);
+                                            }
+                                        },
+                                        editable: "inline"
+                                    });
+                            });
+                            $('#UnitPriceExclTax').on('keyup', function () {
+                                var v = $('UnitPriceExclTax').val();
+                                alert(v);
+                            });
+
+                            $("#UnitPriceExclTax").on("propertychange change keyup paste input", function () {
+                                // do stuff;
+                                var v = $('UnitPriceExclTax').val();
+                                alert(v);
+                            });
+
+                            function calculateProfit(uid, purchasePrice, unitPriceExclTax) {
+                                var profit = toComma(purchasePrice <= 0 ? 100 : (100 * unitPriceExclTax / purchasePrice - 100).toFixed(2));
+                                //alert(uid + ":" + purchasePrice + ":" + unitPriceExclTax + ":" + profit);
+                                $("#QuickOrderGrid").find("tr[data-uid='" + uid + "'] td:eq(11)").html(profit);
+                                $("#QuickOrderGrid").find("tr[data-uid='" + uid + "'] td:eq(11)").val(profit);
+                                return profit;
+                            }
+                            function discTemplate(data) {
+                                //var newStockComing = (data.NewStockComing == null || data.NewStockComing <= 0) ? "<span class='fa fa-close false-icon'></span>" : data.NewStockComing;
+                                return data.NewStockComing == null ? 0 : data.NewStockComing;
+                            }
+                            function productEditorDropdown(container, options) {
+                                $('<input  required name="' + options.field + '"/>')
+                                    .appendTo(container)
+                                    .kendoComboBox({
+                                        dataTextField: "ProductName",
+                                        dataValueField: "ProductId",
+                                        dataSource: {
+                                            data: productsItems,
+                                            contentType: "application/json",
+                                            dataType: 'json',
+                                        },
+
+                                        filter: "contains",
+                                        suggest: true,
+                                        index: 3
+                                    });
+                                var grid = $("#QuickOrderGrid").data("kendoGrid");
+                                grid.showColumn(5);
+                            }
+                            ///////////////////// Apply ReadOnly Attribute, ///////////////////////////////////////////////////////
+
+                            var InvoiceDate = $("#@Html.IdFor(model => model.DateInvoice)");
+                            $(InvoiceDate).prop('readonly', true);
+                        </script>
+
+                    </div>
+                </div>
+
+
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-12">
+
+                                <div class="row" style="float:right;margin-top:1%;">
+                                    <div class="col-md-6">
+                                        <button type="submit" id="btnSave" name="btnSave" class="btn btn-primary bg-green text-bold"><i class="fa fa-save"></i> Save </button>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button type="button" id="btnCancel" name="btnCancel" class="btn btn-danger text-bold" @*style="float:right;margin-right:6%" *@><i class="fa fa-close"></i> Cancel </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    @*</div>*@
+                </div>
+            </div>
+        </div>
+
+        @********************** New Setting Start*************************@
+
+        <nop-delete-confirmation asp-model-id="@Model.Id" asp-button-id="customer-delete" />
+        @if (Model.GdprEnabled)
+        {
+            <nop-delete-confirmation asp-model-id="@Model.Id" asp-action="GdprDelete" asp-button-id="customer-gdpr-delete" />
+        }
+    </div>
+</form>
+
+<style>
+    .k-grid-toolbar a {
+        float: right;
+        margin-right: 1% !important;
+    }
+
+    .k-list-container {
+        min-width: 300px !important;
+        width: auto !important;
+    }
+
+    .k-list {
+        width: auto !important;
+    }
+</style>

@@ -1,0 +1,609 @@
+@model CustomerModel
+
+@inject AdminAreaSettings adminAreaSettings
+
+@{
+    //page title
+    ViewBag.Title = T("Admin.Customers.Customers.EditCustomerDetails").Text;
+    //active menu item (system name)
+    Html.SetActiveMenuItemSystemName("Customers list");
+}
+
+<form asp-controller="Customer" asp-action="Edit" method="post"  enctype="multipart/form-data">
+    <div class="content-header clearfix">
+        <h1 class="pull-left">
+            @T("Admin.Customers.Customers.EditCustomerDetails") - @Model.LastName @Model.FirstName
+            <small>
+                <i class="fa fa-arrow-circle-left"></i>
+                <a asp-action="List">@T("Admin.Customers.Customers.BackToList")</a>
+            </small>
+        </h1>
+        <div class="pull-right">
+            <button type="submit" name="save" class="btn bg-blue">
+                <i class="fa fa-floppy-o"></i>
+                @T("Admin.Common.Save")
+            </button>
+            <button type="submit" name="save-continue" class="btn bg-blue">
+                <i class="fa fa-floppy-o"></i>
+                @T("Admin.Common.SaveContinue")
+            </button>
+            <button type="button" id="btnAddBulkOrder"  name="btnAddBulkOrder" class="btn btn-primary bg-green">
+                <a asp-action="QuickOrder" asp-controller="Order" asp-area="admin" asp-route-customerId="@Model.Id"><span style="color:whitesmoke;font-weight:10px;">  @T("Admin.QuickOrder").Text </span></a>
+            </button>
+            @*<button type="button" name="save-continue" class="btn bg-green">
+                    <i class="fa fa-floppy-o"></i>
+                    @T("Admin.Common.SaveContinue")
+                </button>*@
+            <button type="button" class="btn bg-green" id="" data-toggle="modal" data-target="#sendemail-window">
+                <i class="fa fa-at"></i>
+                @T("Admin.Customers.Customers.SendEmail")
+            </button>
+            <button type="button" class="btn bg-green" data-toggle="modal" data-target="#sendprivatemessage-window">
+                <i class="fa fa-envelope-o"></i>
+                @T("Admin.Customers.Customers.SendPM")
+            </button>
+            @if (Model.AllowSendingOfWelcomeMessage)
+            {
+                <button type="submit" id="send-welcome-message" name="send-welcome-message" class="btn bg-green">
+                    <i class="fa fa-smile-o"></i>
+                    @T("Admin.Customers.Customers.SendWelcomeMessage")
+                </button>
+                <nop-action-confirmation asp-button-id="send-welcome-message" />
+            }
+            @if (Model.AllowReSendingOfActivationMessage)
+            {
+                <button type="submit" id="resend-activation-message" name="resend-activation-message" class="btn bg-green">
+                    <i class="fa fa-check-circle"></i>
+                    @T("Admin.Customers.Customers.ReSendActivationMessage")
+                </button>
+                <nop-action-confirmation asp-button-id="resend-activation-message" />
+            }
+            @if (Model.GdprEnabled)
+            {
+
+                <div class="btn-group">
+                    <button type="button" class="btn btn-success">
+                        <i class="fa fa-download"></i>
+                        @T("Admin.Customers.Customers.Gdpr")
+                    </button>
+                    <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                        <span class="caret"></span>
+                        <span class="sr-only">&nbsp;</span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu">
+                        <li>
+                            <a asp-action="GdprExport" asp-route-id="@Model.Id">
+                                <i class="fa fa-file-code-o"></i>
+                                @T("Admin.Customers.Customers.Gdpr.Export")
+                            </a>
+                        </li>
+                        <li>
+                            <a id="customer-gdpr-delete" href="#">
+                                <i class="fa fa-trash-o"></i>
+                                @T("Admin.Customers.Customers.Gdpr.Delete")
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            }
+            <span id="customer-delete" class="btn bg-red">
+                <i class="fa fa-trash-o"></i>
+                @T("Admin.Common.Delete")
+            </span>
+            @await Component.InvokeAsync("AdminWidget", new { widgetZone = AdminWidgetZones.CustomerDetailsButtons, additionalData = Model })
+        </div>
+    </div>
+    @await Html.PartialAsync("_CreateOrUpdate", Model)
+</form>
+@****************Modal***********@
+
+
+
+<div class="container">   
+    <!-- Button to Open the Modal -->
+    @*<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">
+            Open modal
+        </button>*@
+
+    <!-- The Modal -->
+    <div class="modal" id="myModal">
+        <div class="modal-dialog modalbox" style=" width: 80%!important; margin-left: 17%!important; margin-top: 3%;">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                @*<div class="modal-header">
+                          <button type="button" class="close" data-dismiss="modal">&times;</button>
+                 </div>*@
+                <!-- Modal body -->
+                <div class="modal-body">
+                    <div class="panel-body">
+                        <div class="panel panel-default panel-search">
+                            <div class="panel-body">
+                                <div class="row search-row" data-hideattribute="OrdersPage.HideSearchBlock">
+                                    <div class="search-text"></div>
+                                    @*<div class="icon-search"><i class="fa fa-plus" aria-hidden="true"></i></div>*@
+                                    <div class="icon-collapse"><i class="fa fa-angle-down" aria-hidden="false"></i></div>
+                                </div>
+                                <div class="search-body closed">
+                                    <div class="panel-body">
+                                        <div class="row col-md-12">
+                                            @*...Date Invoice.....*@
+                                            @if (Model.DateInvoiceEnabled)
+                                            {
+                                                <div class="form-group row col-md-6">
+                                                    <div class="col-md-4">
+                                                        <nop-label asp-for="DateInvoice" />
+                                                    </div>
+                                                    <div class="col-md-8">
+                                                        <nop-editor asp-for="DateInvoice" />
+                                                        <span asp-validation-for="DateInvoice"></span>
+                                                    </div>
+                                                </div>
+                                            }
+                                            @*...Price Group.....*@
+                                            @*<div class="form-group row col-md-6">
+                                                <div class="col-sm-4">
+                                                    <nop-label asp-for="PriceGroup" />
+                                                </div>
+                                                <div class="col-sm-8">
+                                                    <nop-select asp-for="PriceGroup" asp-items="Model.AvailableCustomerRoles" />
+                                                   <span asp-validation-for="PriceGroup"></span>
+                                                </div>
+                                            </div>*@
+
+
+                                        </div>
+                                        <div class="row">
+                                            @*...Saleman.....*@
+                                            <div class="form-group row col-md-6">
+                                                <div class="col-sm-4">
+                                                    <nop-label asp-for="SelectedCustomerRoleIds" />
+                                                </div>
+                                                <div class="col-sm-8">
+                                                    <nop-select asp-for="SelectedCustomerRoleIds" asp-items="Model.AvailableCustomerRoles" />
+                                                    <span asp-validation-for="SelectedCustomerRoleIds"></span>
+                                                </div>
+                                            </div>
+
+                                            @if (Model.RemarksEnabled)
+                                            {
+                                                <div class="row col-md-6 form-group">
+                                                    <div class="col-md-4">
+                                                        <nop-label asp-for="Remarks" />
+                                                    </div>
+                                                    <div class="col-md-8">
+                                                        <nop-editor asp-for="Remarks" />
+                                                        <span asp-validation-for="Remarks"></span>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+
+                                        <div class="row">
+                                            @*...Status.....*@
+                                            <div class="form-group row col-md-6" @(Model.IsLoggedInAsVendor ? Html.Raw("style='display: none;'") : null)>
+                                                <div class="col-md-4">
+                                                    <nop-label asp-for="OrderStatusIds" />
+                                                </div>
+                                                <div class="col-md-8">
+                                                    <nop-select asp-for="OrderStatusIds" asp-items="Model.AvailableOrderStatuses" asp-multiple="true" />
+                                                </div>
+                                            </div>
+                                            @*...Packing Tupe.....*@
+                                            <div class="col-md-3">
+                                                <nop-label asp-for="SelectedPackingTypeIds" />
+                                            </div>
+                                            <div class="col-md-9">
+                                                <div class="input-group input-group-required">
+                                                    <nop-select asp-for="SelectedPackingTypeIds" asp-items="Model.AvailablePackingType" asp-multiple="true" />
+                                                    <div class="input-group-btn">
+                                                        <nop-required />
+                                                    </div>
+                                                </div>
+                                                <script>
+                                                    $(document).ready(function () {
+                                                        var customerRolesIdsInput = $('#@Html.IdFor(model => model.SelectedPackingTypeIds)').data("kendoMultiSelect");
+                                                        customerRolesIdsInput.setOptions({
+                                                            customerRolesIdsInput: false,
+                                                            filter: "contains"
+                                                        });
+                                                        @if (Model.AvailablePackingType != null && Model.AvailablePackingType.Count == 0)
+                                                        {
+                                                            <text>
+                                                        customerRolesIdsInput.setOptions{
+                                                            enable: false,
+                                                                placeholder: '@T("Admin.Customers.Customers.Fields.CustomerRoles.NoRoles")'
+                                                        }
+                                                        );
+                                                    customerRolesIdsInput._placeholder();
+                                                    customerRolesIdsInput._enable();
+                                                    </text>
+                                                        }
+                                                        });                                                 
+                                                </script>
+                                            </div>
+
+                                        </div>
+                                      
+                                        <div class="row">
+                                            <div class="col-md-7 col-md-offset-5">
+                                                <button type="button" id="search-orders" class="btn btn-primary bg-green "> <i class="fa fa-plus"></i> Add </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="panel-body">
+                            <div id="customers-grid_wrapper" class="dataTables_wrapper form-inline dt-bootstrap no-footer">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="dataTables_scroll">
+                                            <div class="dataTables_scrollHead" style="overflow: hidden; position: relative; border: 0px; width: 100%;">
+                                                @*<div class="dataTables_scrollHeadInner" style="box-sizing: content-box; width: 824px; padding-right: 0px;">*@
+                                                <table class="table table-bordered table-hover table-striped dataTable no-footer" width="100%" role="grid" style="margin-left: 0px;">
+                                                    <thead>
+                                                        <tr role="row">
+                                                            @*<th class="sorting_disabled text-center" rowspan="1" colspan="1" style="width: 13px;">
+                                            <input id="mastercheckbox" type="checkbox">
+                                            </th>*@
+                                                            <th class="sorting_disabled" rowspan="1" colspan="1" id="Brand" style="width:8.5% ;">Brand</th>
+                                                            <th class="sorting_disabled" rowspan="1" colspan="1" id="ProductGroup" style="width:13%;">Product Group</th>
+                                                            <th class="sorting_disabled" rowspan="1" colspan="1" id="ItemDesc" style="width: 14%;">Items Desc</th>
+                                                            <th class="sorting_disabled" rowspan="1" colspan="1" id="Code" style="width: 7%;">Code</th>
+                                                            <th class="sorting_disabled" rowspan="1" colspan="1" id="Qty" style="width:13% ;">Qty</th>
+                                                            <th class="sorting_disabled" rowspan="1" colspan="1" id="Price" style="width:13% ;">Price</th>
+                                                            <th class="sorting_disabled" rowspan="1" colspan="1" id="Discount" style="width:13% ;">Discount</th>
+                                                            <th class="sorting_disabled button-column" rowspan="1" id="Total" colspan="1" style="width:8% ;">Total</th>
+                                                            <th class="sorting_disabled button-column" rowspan="1" id="Action" colspan="1" style="width:8.6% ;">Action</th>
+                                                        </tr>
+                                                    </thead>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="dataTables_scrollBody" style="position: relative; overflow: auto; width: 100%;">
+                                            <table class="table table-bordered table-hover table-striped dataTable no-footer" width="100%" id="customers-grid" role="grid" aria-describedby="customers-grid_info" style="width: 100%;">
+                                               
+                                                <tbody>
+                                                    <tr role="row" class="odd">
+                                                        <td class="select">
+                                                            <select>
+                                                                <option value="volvo">Brand</option>
+                                                            </select>
+                                                        </td>
+                                                        <td class="select" style="width:10%">
+                                                            <select>
+                                                                <option value="volvo">  Batteries Iphone  </option>
+                                                            </select>
+                                                        </td>
+                                                        <td class="select">
+                                                            <select>
+                                                                <option value="volvo">CEM Batteries</option>
+                                                            </select>
+                                                        </td>
+                                                        <td>3263543</td>
+                                                        <td class=" text-center">
+                                                            <input name="checkbox_customers " style="width:100px" value="" type="text" class="">
+                                                        </td>
+                                                        <td class=" text-center">
+                                                            <input name="checkbox_customers" style="width:100px" value="" type="text" class="">
+                                                        </td>
+                                                        <td class=" text-center">
+                                                            <input name="checkbox_customers" style="width:100px" value="" type="text" class="">
+                                                        </td>
+                                                        <td>3564.60 $</td>
+                                                        <td class="row button-column">
+                                                            <a class="btn btn-default" href="Edit/2013"><i class="fa fa-pencil"></i>Edit</a>
+                                                            @*<a class="btn btn-danger" href="Edit/2013"><i class="fa fa-trash-o"></i>Delete</a>*@
+                                                        </td>
+                                                    </tr>
+                                                    <tr role="row" class="odd">
+                                                        <td class="select">
+                                                            <select>
+                                                                <option value="volvo">Brand</option>
+                                                            </select>
+                                                        </td>
+                                                        <td class="select" style="width:10%">
+                                                            <select>
+                                                                <option value="volvo">  Batteries Iphone  </option>
+                                                            </select>
+                                                        </td>
+                                                        <td class="select">
+                                                            <select>
+                                                                <option value="volvo">CEM Batteries</option>
+                                                            </select>
+                                                        </td>
+                                                        <td>3260543</td>
+                                                        <td class=" text-center">
+                                                            <input name="checkbox_customers " style="width:100px" value="" type="text" class="">
+                                                        </td>
+                                                        <td class=" text-center">
+                                                            <input name="checkbox_customers" style="width:100px" value="" type="text" class="">
+                                                        </td>
+                                                        <td class=" text-center">
+                                                            <input name="checkbox_customers" style="width:100px" value="" type="text" class="">
+                                                        </td>
+                                                        <td>6246.60 $</td>
+                                                        <td class="row button-column">
+                                                            <a class="btn btn-default" href="Edit/2013"><i class="fa fa-pencil"></i>Edit</a>
+                                                            @*<a class="btn btn-danger" href="Edit/2013"><i class="fa fa-trash-o"></i>Delete</a>*@
+                                                        </td>
+                                                    </tr>
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @*<script>
+            function updateMasterCheckbox()
+            {
+                var n = $("#customers-grid input[type=checkbox][id!=mastercheckbox][class=checkboxGroups]").length,
+                    t = $("#customers-grid input[type=checkbox][id!=mastercheckbox][class=checkboxGroups]:checked").length;
+                $("#mastercheckbox").attr("checked",
+                    n == t && n > 0)
+            }
+            function updateTable(n)
+            {
+                $(n).DataTable().ajax.reload();
+                !0 && ($("#mastercheckbox").attr("checked", !1).change(), selectedIds = [])
+            }
+            var selectedIds = []; $(document).ready(function ()
+            {
+                $("#customers-grid").DataTable({
+                    processing: !0, serverSide: !0, ajax:
+                    {
+                        url: "/Admin/Customer/CustomerList", type: "POST", dataType: "json", dataSrc: "Data", data: function (n)
+                        {
+                            return n.SelectedCustomerRoleIds = $("#SelectedCustomerRoleIds").val(), n.SearchEmail = $("#SearchEmail").val(),
+                                n.SearchUsername = $("#SearchUsername").val(),
+                                n.SearchFirstName = $("#SearchFirstName").val(),
+                                n.SearchLastName = $("#SearchLastName").val(),
+                                n.SearchDayOfBirth = $("#SearchDayOfBirth").val(),
+                                n.SearchMonthOfBirth = $("#SearchMonthOfBirth").val(),
+                                n.SearchCompany = $("#SearchCompany").val(),
+                                n.SearchPhone = $("#SearchPhone").val(),
+                                n.SearchZipPostalCode = $("#SearchZipPostalCode").val(),
+                                n.SearchIpAddress = $("#SearchIpAddress").val(), addAntiForgeryToken(n),
+                                n
+                        }
+                    },
+                    scrollX: !0, info: !0, paging: !0, pagingType: "simple_numbers",
+                    language: {
+                        emptyTable: "No data available in table",
+                        info: "_START_-_END_ of _TOTAL_ items", infoEmpty: "No records", infoFiltered: "(filtered from _MAX_ total entries)", thousands: ",", lengthMenu: "Show _MENU_ items", loadingRecords: "Loading...", processing: "<i class='fa fa-refresh fa-spin'><\/i>", search: "Search:", zeroRecords: "No matching records found", paginate: { first: "<i class='k-icon k-i-seek-w'><\/i>", last: "<i class='k-icon k-i-seek-e'><\/i>", next: "<i class='k-icon k-i-arrow-e'><\/i>", previous: "<i class='k-icon k-i-arrow-w'><\/i>" }, aria: { sortAscending: ": activate to sort column ascending", sortDescending: ": activate to sort column descending" }
+                    },
+                    pageLength: 15, lengthMenu: [7, 15, 20, 50, 100], ordering: !1,
+                    buttons: [{
+                        name: "refresh", text: '<i class="fa fa-refresh" style="padding-left: 5px"><\/i>',
+                        action: function () { updateTable("#customers-grid") }
+                    }],
+                    dom: "<'row'<'col-md-12't>><'row margin-t-5'<'col-lg-5 col-xs-12'<'float-lg-left'p>><'col-lg-3 col-xs-12'<'text-center'l>><'col-lg-3 col-xs-12'<'float-lg-right text-center'i>><'col-lg-1 col-xs-12'<'float-lg-right text-center data-tables-refresh'B>>>", columns: [{ title: '<input id="mastercheckbox" type="checkbox"/>', width: "50", visible: !0, searchable: !1, className: "text-center", render: function (n, t, i) { return n === "true" ? '<input name="checkbox_customers" value="' + i.Id + '" type="checkbox" class="checkboxGroups" checked="checked" />' : '<input name="checkbox_customers" value="' + i.Id + '" type="checkbox" class="checkboxGroups" />' }, data: "Id" }, { title: "Email", width: "200", visible: !0, searchable: !1, render: $.fn.dataTable.render.text(), data: "Email" }, { title: "Name", width: "200", visible: !0, searchable: !1, render: $.fn.dataTable.render.text(), data: "FullName" }, { title: "Customer roles", width: "200", visible: !0, searchable: !1, render: $.fn.dataTable.render.text(), data: "CustomerRoleNames" }, { title: "Company name", width: "200", visible: !0, searchable: !1, render: $.fn.dataTable.render.text(), data: "Company" }, { title: "Active", width: "100", visible: !0, searchable: !1, className: "text-center", render: function (n) { return n == !0 ? '<i class="fa fa-check true-icon" nop-value="true"><\/i>' : '<i class="fa fa-close false-icon" nop-value="false"><\/i>' }, data: "Active" }, { title: "Created on", width: "200", visible: !0, searchable: !1, render: function (n) { return n ? moment(n).locale("en").format("MM/DD/YYYY HH:mm:ss") : null }, data: "CreatedOn" }, { title: "Last activity", width: "200", visible: !0, searchable: !1, render: function (n) { return n ? moment(n).locale("en").format("MM/DD/YYYY HH:mm:ss") : null }, data: "LastActivityDate" }, { title: "Edit", width: "100", visible: !0, searchable: !1, className: "button-column", render: function (n) { return '<a class="btn btn-default" href="Edit/' + n + '"><i class="fa fa-pencil"><\/i>Edit<\/a>' }, data: "Id" }]
+                }); $("#search-customers").click(function () { return $("#customers-grid").DataTable().ajax.reload(), $(".checkboxGroups").attr("checked", !1).change(), selectedIds = [], !1 }); $("#mastercheckbox").click(function () { $(".checkboxGroups").attr("checked", $(this).is(":checked")).change() }); $("#customers-grid").on("change", "input[type=checkbox][id!=mastercheckbox][class=checkboxGroups]", function () { var n = $(this), t = jQuery.inArray(n.val(), selectedIds); n.is(":checked") == !0 ? t == -1 && selectedIds.push(n.val()) : t > -1 && (selectedIds = $.grep(selectedIds, function (t) { return t != n.val() })); updateMasterCheckbox() })
+            })
+        </script>*@
+                    </div>
+                    @*......................End Grid.........*@
+                    <div class="container" style="margin-left:1%;width:98%">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <a href="#" class="well-link">
+                                    <div class="panel panel-default panel-shadow">
+                                        <div class="panel-heading">
+                                            <i class="fa fa-file"></i>
+                                            Summary
+                                        </div>
+                                        <div class="panel-body row">
+                                            @*...Net Discount.....*@
+                                            @if (Model.NetDiscountEnabled)
+                                            {
+                                                <div class="row col-md-3 form-group">
+                                                    <div class="col-md-5">
+                                                        <nop-label asp-for="NetDiscount" />
+                                                    </div>
+                                                    <div class="col-md-7">
+                                                        <nop-editor asp-for="NetDiscount" />
+                                                        <span asp-validation-for="NetDiscount"></span>
+                                                    </div>
+                                                </div>
+                                            }
+                                            @*...Bill Amount.....*@
+
+                                            @if (Model.BillAmoutEnabled)
+                                            {
+                                                <div class="row col-md-3 form-group">
+                                                    <div class="col-md-5">
+                                                        <nop-label asp-for="BillAmount" />
+                                                    </div>
+                                                    <div class="col-md-7">
+                                                        <nop-editor asp-for="BillAmount" />
+                                                        <span asp-validation-for="BillAmount"></span>
+                                                    </div>
+                                                </div>
+                                            }
+                                            @*...Paid Amount.....*@
+                                            @if (Model.PaidAmountEnabled)
+                                            {
+                                                <div class="row col-md-3 form-group">
+                                                    <div class="col-md-5">
+                                                        <nop-label asp-for="PaidAmount" />
+                                                    </div>
+                                                    <div class="col-md-7">
+                                                        <nop-editor asp-for="PaidAmount" />
+                                                        <span asp-validation-for="PaidAmount"></span>
+                                                    </div>
+                                                </div>
+                                            }
+                                            @*...Due Balance.....*@
+                                            @if (Model.DueBalanceEnabled)
+                                            {
+                                                <div class="row col-md-3 form-group">
+                                                    <div class="col-md-5">
+                                                        <nop-label asp-for="DueBalance" />
+                                                    </div>
+                                                    <div class="col-md-7">
+                                                        <nop-editor asp-for="DueBalance" />
+                                                        <span asp-validation-for="DueBalance"></span>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    @*......................End Summary.........*@
+                </div>
+
+                <div class="modal-footer" style="margin-right:3%">
+                    <button type="button"  id="btnClose" name="btnClose" class="btn btn-danger" data-dismiss="modal">Close</button>
+                    <button type="Submit"  id="btnSave" name="btnSave" class="btn bg-green btn-primary"> <i class="fa fa-floppy-o"></i> Save</button>
+                </div>
+            </div>
+
+                <!-- Modal footer -->
+               
+
+            </div>
+        </div>
+    </div>
+
+@*</div>*@
+
+
+
+
+
+<nop-delete-confirmation asp-model-id="@Model.Id" asp-button-id="customer-delete" />
+@if (Model.GdprEnabled)
+{
+    <nop-delete-confirmation asp-model-id="@Model.Id" asp-action="GdprDelete" asp-button-id="customer-gdpr-delete" />
+}
+
+@*send email form*@
+
+<div id="sendemail-window" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="sendemail-window-title">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="sendemail-window-title">@T("Admin.Customers.Customers.SendEmail")</h4>
+            </div>
+            <form asp-controller="Customer" asp-action="SendEmail" method="post">
+                <input type="hidden" asp-for="Id" id="SendEmail_Id" />
+                <div class="form-horizontal">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <nop-label asp-for="SendEmail.Subject" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="SendEmail.Subject" />
+                                <span asp-validation-for="SendEmail.Subject"></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <nop-label asp-for="SendEmail.Body" />
+                            </div>
+                            <div class="col-md-9">
+                                @if (adminAreaSettings.UseRichEditorForCustomerEmails)
+                                {
+                                    <nop-editor asp-for="SendEmail.Body" asp-template="RichEditor" />
+                                }
+                                else
+                                {
+                                    <nop-textarea asp-for="SendEmail.Body" />
+                                }
+                                <span asp-validation-for="SendEmail.Body"></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <nop-label asp-for="SendEmail.SendImmediately" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="SendEmail.SendImmediately" />
+                                <span asp-validation-for="SendEmail.SendImmediately"></span>
+                            </div>
+                        </div>
+                        <div class="form-group" id="pnl-send-date">
+                            <div class="col-md-3">
+                                <nop-label asp-for="SendEmail.DontSendBeforeDate" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="SendEmail.DontSendBeforeDate" />
+                                <span asp-validation-for="SendEmail.DontSendBeforeDate"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">
+                            @T("Admin.Customers.Customers.SendEmail")
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    $('#sendemail-window').on('show.bs.modal', function (e) {
+        $("#@Html.IdFor(model => model.SendEmail.SendImmediately)").click(sendImmediately);
+        sendImmediately();
+    });
+
+    function sendImmediately() {
+        if ($('#@Html.IdFor(model => model.SendEmail.SendImmediately)').is(':checked'))
+            $('#pnl-send-date').hide();
+        else
+            $('#pnl-send-date').show();
+    }
+</script>
+
+@*send PM form*@
+<div id="sendprivatemessage-window" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="sendprivatemessage-window-title">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="sendprivatemessage-window-title">@T("Admin.Customers.Customers.SendPM")</h4>
+            </div>
+            <form asp-controller="Customer" asp-action="SendPm" method="post">
+                <input type="hidden" asp-for="Id" id="SendPm_Id" />
+                <div class="form-horizontal">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <nop-label asp-for="SendPm.Subject" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="SendPm.Subject" />
+                                <span asp-validation-for="SendPm.Subject"></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <nop-label asp-for="SendPm.Message" />
+                            </div>
+                            <div class="col-md-9">
+                                <nop-textarea asp-for="SendPm.Message"></nop-textarea>
+                                <span asp-validation-for="SendPm.Message"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">
+                            @T("Admin.Customers.Customers.SendPM")
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

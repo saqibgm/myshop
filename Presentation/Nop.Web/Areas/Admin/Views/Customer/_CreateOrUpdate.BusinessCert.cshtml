@@ -1,0 +1,46 @@
+@model CustomerModel
+@{
+    bool certUploaded = !string.IsNullOrEmpty(Model.BusinessCertUrl) || Model.BusinessCertId > 0;
+}
+<script>
+    $(document).ready(function () {
+        $('#upload-business-cert').on('click', function (e) {
+            if ($("#uploadedFile").get(0).files.length === 0) {
+                e.preventDefault();
+            } 
+        });
+    });
+
+</script>
+<div class="panel-body">
+    <div class="page-body">
+        <div class="">
+            @if (certUploaded)
+            {
+                <br />
+                <div class="">
+                    <a href="/Download/GetFileUploadById?downloadId=@Model.BusinessCertId" class="download-uploaded-file">@T("Common.FileUploader.DownloadUploadedFile")</a>
+                </div>
+                <br />
+                <div class="buttons">
+                    <input type="submit" name="remove-business-cert" class="btn btn-danger" value="@T("Account.BusinessCert.Remove")" />
+                </div>
+            }
+            else
+            {
+                @*<div class="info">
+                        @T("Admin.Customers.Customers.BusinessCertNotUploaded")
+                    </div>*@
+                <input class="btn btn-default" id="uploadedFile" name="uploadedFile" type="file" size="60" />
+                <br />
+                <div class="info">
+                    @T("Account.BusinessCert.UploadRules")
+                </div>
+                <br />
+                <div class="buttons">
+                    <input type="submit" id="upload-business-cert" name="upload-business-cert" class="btn btn-primary" value="@T("Common.Upload")" />
+                </div>
+            }
+        </div>
+    </div>
+</div>

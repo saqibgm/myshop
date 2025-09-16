@@ -1,0 +1,812 @@
+﻿@model CustomerModel
+@using Nop.Core.Domain.Customers;
+@using Nop.Core
+@inject IWorkContext workContext;
+@using Newtonsoft.Json
+@{
+    var currentCustomer = workContext.CurrentCustomer;
+}
+@if (Model.CountryEnabled && Model.StateProvinceEnabled)
+{
+    <script>
+
+
+        $(document).ready(function () {
+            $("#@Html.IdFor(model => model.CountryId)").change(function () {
+                var selectedItem = $(this).val();
+                var ddlStates = $("#@Html.IdFor(model => model.StateProvinceId)");
+
+                var postData = {
+                    countryId: selectedItem,
+                    addSelectStateItem: "true"
+                };
+
+                $.ajax({
+                    cache: false,
+                    type: "GET",
+                    url: "@(Url.Action("GetStatesByCountryId", "Country"))",
+                    data: postData,
+                    success: function (data, textStatus, jqXHR) {
+                        ddlStates.html('');
+                        $.each(data, function (id, option) {
+                            ddlStates.append($('<option></option>').val(option.id).html(option.name));
+                        });
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        $("#statesAlert").click();
+                    }
+                });
+            });
+
+            //  Saleman Role and Enable Basic Salary/ Commission
+
+            $('#@Html.IdFor(model => model.TeamMemberOfSaleman)').change(function () {
+                var selectedItem = $(this).val();
+                var BasicSalary = $("#@Html.IdFor(model => model.BasicSalary)");
+                var commissionPercentage = $("#@Html.IdFor(model => model.CommissionPercentage)");
+                //  alert('Saleman Id -' + selectedItem)
+
+            });// Manager Client Script
+            $('#@Html.IdFor(model => model.SelectedCustomerRoleIds)').change(function () {
+                var selectedItem = $(this).val();
+                //  alert('Selected Text Role -' + selectedItem)
+                var reciever = jQuery('#to_select option:selected').toArray().map(item => item.text).join();
+
+                //var postData = {
+                //    countryId: selectedItem,
+                //    addSelectStateItem: "true"
+                //};
+
+
+            });// Saleman Client Script
+        });// Document.Ready
+    </script>
+}
+<style>
+    .profile-pic {
+        /*max-width: 200px;
+        max-height: 200px;
+        display: block;*/
+    }
+
+
+    .circle {
+        border-radius: 1000px !important;
+        overflow: hidden;
+        width: 128px;
+        height: 128px;
+        border: 8px solid rgba(255, 255, 255, 0.7);
+        position: absolute;
+        top: 7px;
+    }
+
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .p-image {
+        position: absolute;
+        /*top: 167px;*/
+        right: 1px;
+        color: #666666;
+        transition: all .3s cubic-bezier(.175, .885, .32, 1.275);
+    }
+
+        .p-image:hover {
+            transition: all .3s cubic-bezier(.175, .885, .32, 1.275);
+        }
+
+    .upload-button {
+        font-size: 1.2em;
+    }
+
+        .upload-button:hover {
+            transition: all .3s cubic-bezier(.175, .885, .32, 1.275);
+            color: #999;
+        }
+</style>
+<div class="panel-body">
+    <div class="form-group">
+        <div class="col-md-2">
+            <nop-label asp-for="Id" />
+        </div>
+        <div class="col-md-10">
+            <label class="form-control" style="background-color:lightgray"> @Model.Id</label>
+        </div>
+    </div>
+    @if (Model.UsernamesEnabled)
+    {
+        <div class="form-group">
+            <div class="col-md-2">
+                <nop-label asp-for="Username" />
+            </div>
+            <div class="col-md-10">
+                <nop-editor asp-for="Username" />
+                <span asp-validation-for="Username"></span>
+            </div>
+        </div>
+    }
+    <div class="form-group">
+        <div class="col-md-2">
+            <nop-label asp-for="Email" />
+        </div>
+        <div class="col-md-10">
+            <nop-editor asp-for="Email" />
+            <span asp-validation-for="Email"></span>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-2">
+            <nop-label asp-for="Password" />
+        </div>
+        <div class="col-md-10">
+            <div class="input-group">
+                <nop-editor asp-for="Password" />
+                <div class="input-group-btn">
+                    @if (Model.Id > 0)
+                    {
+                        <button type="submit" name="changepassword" class="btn btn-info">
+                            @T("Admin.Customers.Customers.Fields.Password.Change")
+                        </button>
+                    }
+                </div>
+            </div>
+            <span asp-validation-for="Password"></span>
+        </div>
+    </div>
+    @if (Model.CompanyEnabled)
+    {
+        <div class="form-group">
+            <div class="col-md-2">
+                <nop-label asp-for="Company" />
+            </div>
+            <div class="col-md-10">
+                <nop-editor asp-for="Company" />
+                <span asp-validation-for="Company"></span>
+            </div>
+        </div>
+    }
+    <div class="form-group">
+        <div class="col-md-2">
+            <nop-label asp-for="FirstName" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="FirstName" />
+            <span asp-validation-for="FirstName"></span>
+        </div>
+        <div class="col-md-2">
+            <nop-label asp-for="LastName" />
+        </div>
+        <div class="col-md-4">
+            <nop-editor asp-for="LastName" />
+            <span asp-validation-for="LastName"></span>
+        </div>
+    </div>
+    <div class="form-group">
+        @if (Model.GenderEnabled)
+        {
+            <div class="col-md-2">
+                <nop-label asp-for="Gender" />
+            </div>
+            <div class="col-md-4">
+                <div class="raw">
+                    <div class="col-md-6">
+                        <div class="radio">
+                            <label>
+                                @Html.RadioButton("Gender", "M", (Model.Gender == "M"), new { id = "Gender_Male" })
+                                @T("Admin.Customers.Customers.Fields.Gender.Male")
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="radio">
+                            <label>
+                                @Html.RadioButton("Gender", "F", (Model.Gender == "F"), new { id = "Gender_Female" })
+                                @T("Admin.Customers.Customers.Fields.Gender.Female")
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (Model.DateOfBirthEnabled)
+    {
+        <div class="form-group">
+            <div class="col-md-2">
+                <nop-label asp-for="DateOfBirth" />
+            </div>
+            <div class="col-md-10">
+                <nop-editor asp-for="DateOfBirth" />
+                <span asp-validation-for="DateOfBirth"></span>
+            </div>
+        </div>
+    }
+
+    <div class="form-group">
+        @if (Model.StreetAddressEnabled)
+        {
+            <div class="col-md-2">
+                <nop-label asp-for="StreetAddress" />
+            </div>
+            <div class="col-md-4">
+                <nop-editor asp-for="StreetAddress" />
+                <span asp-validation-for="StreetAddress"></span>
+            </div>
+        }
+        @if (false && Model.StreetAddress2Enabled)
+        {
+            <div class="form-group">
+                <div class="col-md-2">
+                    <nop-label asp-for="StreetAddress2" />
+                </div>
+                <div class="col-md-4">
+                    <nop-editor asp-for="StreetAddress2" />
+                    <span asp-validation-for="StreetAddress2"></span>
+                </div>
+            </div>
+        }
+        @if (Model.ZipPostalCodeEnabled)
+        {
+            <div class="col-md-2">
+                <nop-label asp-for="ZipPostalCode" />
+            </div>
+            <div class="col-md-4">
+                <nop-editor asp-for="ZipPostalCode" />
+                <span asp-validation-for="ZipPostalCode"></span>
+            </div>
+        }
+    </div>
+    <div class="form-group">
+        @if (Model.CityEnabled)
+        {
+            <div class="col-md-2">
+                <nop-label asp-for="City" />
+            </div>
+            <div class="col-md-4">
+                <nop-editor asp-for="City" />
+                <span asp-validation-for="City"></span>
+            </div>
+        }
+        @if (false && Model.CountyEnabled)
+        {
+            <div class="form-group">
+                <div class="col-md-2">
+                    <nop-label asp-for="County" />
+                </div>
+                <div class="col-md-10">
+                    <nop-editor asp-for="County" />
+                    <span asp-validation-for="County"></span>
+                </div>
+            </div>
+        }
+        @if (Model.CountryEnabled)
+        {
+            <div class="col-md-2">
+                <nop-label asp-for="CountryId" />
+            </div>
+            <div class="col-md-4">
+                <nop-select asp-for="CountryId" asp-items="Model.AvailableCountries" />
+                <span asp-validation-for="CountryId"></span>
+            </div>
+        }
+    </div>
+    @if (Model.CountryEnabled && Model.StateProvinceEnabled)
+    {
+        <div class="form-group">
+            <div class="col-md-2">
+                <nop-label asp-for="StateProvinceId" />
+            </div>
+            <div class="col-md-10">
+                <nop-select asp-for="StateProvinceId" asp-items="Model.AvailableStates" />
+                <span asp-validation-for="StateProvinceId"></span>
+            </div>
+        </div>
+    }
+    <div class="form-group">
+        @if (Model.PhoneEnabled)
+        {
+            <div class="col-md-2">
+                <nop-label asp-for="Phone" />
+            </div>
+            <div class="col-md-4">
+                <nop-editor asp-for="Phone" />
+                <span asp-validation-for="Phone"></span>
+            </div>
+        }
+        @if (Model.FaxEnabled)
+        {
+            <div class="col-md-2">
+                <nop-label asp-for="Fax" />
+            </div>
+            <div class="col-md-4">
+                <nop-editor asp-for="Fax" />
+                <span asp-validation-for="Fax"></span>
+            </div>
+        }
+    </div>
+
+    @if (Model.CustomerAttributes.Count > 0)
+    {
+        @await Html.PartialAsync("_CustomerAttributes", Model)
+    }
+    <div class="form-group">
+        <div class="col-md-2">
+            <nop-label asp-for="AdminComment" />
+        </div>
+        <div class="col-md-10">
+            <nop-textarea asp-for="AdminComment" />
+            <span asp-validation-for="AdminComment"></span>
+        </div>
+    </div>
+    <div class="row col-md-12 form-group">
+        <div class="col-md-2">
+            <nop-label asp-for="IsTaxExempt" />
+        </div>
+        <div class="col-md-6">
+            <nop-editor asp-for="IsTaxExempt" />
+            <span asp-validation-for="IsTaxExempt"></span>
+        </div>
+    </div>
+    @if (currentCustomer.IsAdmin())
+    {
+        <div class="row col-md-12 form-group">
+            <div class="col-md-2">
+                <nop-label asp-for="IsExportAllowed" />
+            </div>
+            <div class="col-md-6">
+                <nop-editor asp-for="IsExportAllowed" />
+                <span asp-validation-for="IsExportAllowed"></span>
+            </div>
+        </div>
+    }
+    @if (Model.DisplayVatNumber)
+    {
+        <div class="form-group">
+            <div class="col-md-2">
+                <nop-label asp-for="VatNumber" />
+            </div>
+            <div class="col-md-10">
+                <nop-editor asp-for="VatNumber" />
+                 <div class="col-md-5">
+                    (@string.Format(T("Admin.Customers.Customers.Fields.VatNumberStatus").Text, Model.VatNumberStatusNote))
+                    <button type="submit" name="markVatNumberAsValid" class="btn btn-primary">
+                        @T("Admin.Customers.Customers.Fields.VatNumber.MarkAsValid")
+                    </button>
+                    <button type="submit" name="markVatNumberAsInvalid" class="btn bg-red">
+                        @T("Admin.Customers.Customers.Fields.VatNumber.MarkAsInvalid")
+                    </button>
+                </div>
+                 <div class="col-md-3">
+                    <button type="submit" id="btnVerify" name="btnVerify" style="vertical-align:central" class="btn btn-primary bg-blue text-bold"> @T("Customer.VerifyVat").Text </button>
+                    <i id="vatVerified" class="fa fa-check true-icon" style="display:none;padding-top: 7px;font-size:15px" nop-value="true">&nbsp;@T("Customer.VatVerified").Text</i>
+                    <i id="vatNotVerified" class="fa fa-close false-icon" style="display:none;padding-top: 7px;font-size:15px" nop-value="false">&nbsp;@T("Customer.VatNotVerified").Text</i>
+                    <div id="ajaxVatBusy" style="display: none;"><span>&nbsp;</span></div>
+                </div>
+                <script>
+
+                    $(document).ready(function () {
+                        $('#btnVerify').on('click', function (e) {
+                            $('#btnVerify').hide();
+                            $.ajax({
+                                type: 'GET',
+                                url: '@Url.Action("IsVatNoValid", "Customer")',
+                                dataType: 'json',
+                                data: { customerId: "@Model.Id" },
+                                success: function (result) {
+                                    SetVatButton(result);
+                                }
+                            });
+                            return false;
+                        });
+                    });
+                    function SetVatButton(verified) {
+                        if ($("#CustomerId").val() == "") {
+                            $('#btnVerify').hide();
+                            $('#vatVerified').hide();
+                            $('#vatNotVerified').hide();
+                        } else if (verified == true) {
+                            $('#btnVerify').hide();
+                            $('#vatVerified').show();
+                            $('#vatNotVerified').hide();
+                        } else if (verified == false) {
+                            $('#btnVerify').hide();
+                            $('#vatVerified').hide();
+                            $('#vatNotVerified').show();
+                        }
+                        else {
+                            $('#btnVerify').show();
+                            $('#vatVerified').hide();
+                            $('#vatNotVerified').hide();
+                        }
+                    }
+
+                </script>
+                <span asp-validation-for="VatNumber"></span>
+            </div>
+        </div>
+    }
+    @if (Model.AllowCustomersToSetTimeZone)
+    {
+        <div class="form-group">
+            <div class="col-md-2">
+                <nop-label asp-for="TimeZoneId" />
+            </div>
+            <div class="col-md-10">
+                <nop-select asp-for="TimeZoneId" asp-items="Model.AvailableTimeZones" />
+                <span asp-validation-for="TimeZoneId"></span>
+            </div>
+        </div>
+    }
+    @if (Model.AvailableNewsletterSubscriptionStores != null && Model.AvailableNewsletterSubscriptionStores.Count > 0)
+    {
+        <div class="form-group">
+            <div class="col-md-2">
+                <nop-label asp-for="SelectedNewsletterSubscriptionStoreIds" />
+            </div>
+            <div class="col-md-10">
+                @foreach (var store in Model.AvailableNewsletterSubscriptionStores)
+                {
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" name="SelectedNewsletterSubscriptionStoreIds" value="@store.Value" checked="@store.Selected" />
+                            (@(store.Text))
+                        </label>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    @if (currentCustomer.IsAdmin() || currentCustomer.IsSaleman())
+    {
+        <div class="form-group">
+            <div class="col-md-2">
+                <nop-label asp-for="SelectedCustomerRoleIds" />
+            </div>
+            <div class="col-md-10">
+                <div class="input-group input-group-required">
+                    <nop-select asp-for="SelectedCustomerRoleIds" asp-items="Model.AvailableCustomerRoles" asp-multiple="true" />
+                    <div class="input-group-btn">
+                        <nop-required />
+                    </div>
+                </div>
+                <script>
+                    $(document).ready(function () {
+                        var customerRolesIdsInput = $('#@Html.IdFor(model => model.SelectedCustomerRoleIds)').data("kendoMultiSelect");
+                        // alert(JSON.stringify(customerRolesIdsInput));
+                        customerRolesIdsInput.setOptions({
+                            customerRolesIdsInput: false,
+                            filter: "contains"
+                        });
+
+                    @if (Model.AvailableCustomerRoles.Count == 0)
+                    {
+                        <text>
+                                    customerRolesIdsInput.setOptions({
+                                        enable: false,
+                                    placeholder: '@T("Admin.Customers.Customers.Fields.CustomerRoles.NoRoles")'
+                                                    });
+                                    customerRolesIdsInput._placeholder();
+                                    customerRolesIdsInput._enable();
+                        </text>
+                    }
+                                    });
+                </script>
+            </div>
+        </div>
+    }
+    @if (currentCustomer.IsAdmin() && Model.IsSalesman)
+    {
+        <div class="form-group">
+            <div class="col-md-2">
+                <nop-label asp-for="ReportingTo" />
+            </div>
+            <div class="col-md-10">
+                <nop-select asp-for="ReportingTo" asp-items="Model.AvailableManagers" />
+                <span asp-validation-for="ReportingTo"></span>
+            </div>
+        </div>
+    }
+    @if ((currentCustomer.IsAdmin() || currentCustomer.IsManager()) && Model.IsCustomer)
+    {
+        <div class="form-group">
+            <div class="col-md-2">
+                <nop-label asp-for="TeamMemberOfSaleman" />
+            </div>
+            <div class="col-md-10">
+                <nop-select asp-for="TeamMemberOfSaleman" asp-items="Model.AvailableSalemanList" />
+                <span asp-validation-for="TeamMemberOfSaleman"></span>
+            </div>
+        </div>
+    }
+    <div class="form-group">
+        <div class="col-md-2">
+            <nop-label asp-for="VendorId" />
+        </div>
+        <div class="col-md-10">
+            <nop-select asp-for="VendorId" asp-items="Model.AvailableVendors" />
+            <span asp-validation-for="VendorId"></span>
+            <em>@T("Admin.Customers.Customers.VendorShouldBeInVendorsRole")</em>
+        </div>
+    </div>
+    @if (Model.AffiliateId > 0)
+    {
+        <div class="form-group">
+            <div class="col-md-2">
+                <nop-label asp-for="AffiliateId" />
+            </div>
+            <div class="col-md-10">
+                <a asp-controller="Affiliate" asp-action="Edit" asp-route-id="@Model.AffiliateId">@Model.AffiliateName - @T("Admin.Common.View")</a>
+                <button type="submit" name="remove-affiliate" class="btn bg-red">
+                    @T("Admin.Customers.Customers.Fields.Affiliate.Remove")
+                </button>
+            </div>
+        </div>
+    }
+    <div class="form-group">
+        <div class="col-md-2">
+            <nop-label asp-for="Active" />
+        </div>
+        <div class="col-md-2">
+            <nop-editor asp-for="Active" />
+            <span asp-validation-for="Active"></span>
+        </div>
+    </div>
+    @if ((currentCustomer.IsAdmin() || currentCustomer.IsManager()) && Model.IsSalesman)
+    {
+        <div class="form-group">
+            <div class="col-md-2">
+                <nop-label asp-for="BasicSalary" />
+            </div>
+            <div class="col-md-2">
+                <nop-editor asp-for="BasicSalary" />
+                <span asp-validation-for="BasicSalary"></span>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-2">
+                <nop-label asp-for="CommissionPercentage" />
+            </div>
+            <div class="col-md-2">
+                <nop-editor asp-for="CommissionPercentage" />
+                <span asp-validation-for="CommissionPercentage"></span>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-2">
+                <nop-label asp-for="CommissionMinTargert" />
+            </div>
+            <div class="col-md-2">
+                <nop-editor asp-for="CommissionMinTargert" />
+                <span asp-validation-for="CommissionMinTargert"></span>
+            </div>
+        </div>
+    }
+
+    @*@if (Model.BasicSalaryEnabled)
+    {
+    <div class="form-group">
+    <div class="col-md-2">
+    <nop-label asp-for="BasicSalary" />
+    </div>
+    <div class="col-md-10">
+    <nop-editor asp-for="BasicSalary" />
+    <span asp-validation-for="BasicSalary"></span>
+    </div>
+    </div>
+    }*@
+
+    @if (Model.Id > 0 && Model.CustomerAssociatedExternalAuthRecordsSearchModel.AssociatedExternalAuthRecords.Count > 0)
+    {
+        <div class="form-group">
+            <div class="col-md-2">
+                <nop-label asp-for="CustomerAssociatedExternalAuthRecordsSearchModel.AssociatedExternalAuthRecords" />
+            </div>
+            <div class="col-md-10">
+                @await Html.PartialAsync("Table", new DataTablesModel
+       {
+           Name = "externalauthrecords-grid",
+           Paging = false,
+           ServerSide = false,
+           Length = Model.CustomerAssociatedExternalAuthRecordsSearchModel.PageSize,
+           LengthMenu = Model.CustomerAssociatedExternalAuthRecordsSearchModel.AvailablePageSizes,
+           ColumnCollection = new List<ColumnProperty>
+            {
+            new ColumnProperty(nameof(CustomerAssociatedExternalAuthModel.AuthMethodName))
+            {
+            Title = T("Admin.Customers.Customers.AssociatedExternalAuth.Fields.AuthMethodName").Text,
+            Width = "100"
+            },
+            new ColumnProperty(nameof(CustomerAssociatedExternalAuthModel.Email))
+            {
+            Title = T("Admin.Customers.Customers.AssociatedExternalAuth.Fields.AuthMethodName").Text,
+            Width = "100"
+            },
+            new ColumnProperty(nameof(CustomerAssociatedExternalAuthModel.ExternalIdentifier))
+            {
+            Title = T("Admin.Customers.Customers.AssociatedExternalAuth.Fields.ExternalIdentifier").Text,
+            Width = "300"
+            }
+            },
+           Data = JsonConvert.SerializeObject(Model.CustomerAssociatedExternalAuthRecordsSearchModel.AssociatedExternalAuthRecords.Select(externalAuthRecord => new
+           {
+               AuthMethodName = JavaScriptEncoder.Default.Encode(externalAuthRecord.AuthMethodName),
+               Email = JavaScriptEncoder.Default.Encode(externalAuthRecord.Email),
+               ExternalIdentifier = JavaScriptEncoder.Default.Encode(externalAuthRecord.ExternalIdentifier)
+           }).ToList())
+       })
+            </div>
+        </div>
+    }
+    @if (Model.Id > 0 && !string.IsNullOrEmpty(Model.RegisteredInStore))
+    {
+        <div class="form-group">
+            <div class="col-md-2">
+                <nop-label asp-for="RegisteredInStore" />
+            </div>
+            <div class="col-md-10">
+                <div class="form-text-row">@Model.RegisteredInStore</div>
+            </div>
+        </div>
+    }
+    @if (Model.Id > 0)
+    {
+        <div class="form-group">
+            <div class="col-md-2">
+                <nop-label asp-for="LastIpAddress" />
+            </div>
+            <div class="col-md-10">
+                <div class="form-text-row">@Model.LastIpAddress</div>
+            </div>
+        </div>
+    }
+    @if (Model.Id > 0)
+    {
+        <div class="form-group">
+            <div class="col-md-2">
+                <nop-label asp-for="CreatedOn" />
+            </div>
+            <div class="col-md-10">
+                <div class="form-text-row">@Model.CreatedOn</div>
+            </div>
+        </div>
+    }
+    @if (Model.Id > 0)
+    {
+        <div class="form-group">
+            <div class="col-md-2">
+                <nop-label asp-for="LastActivityDate" />
+            </div>
+            <div class="col-md-10">
+                <div class="form-text-row">@Model.LastActivityDate</div>
+            </div>
+        </div>
+    }
+    @if (Model.Id > 0 && !string.IsNullOrEmpty(Model.LastVisitedPage))
+    {
+        <div class="form-group">
+            <div class="col-md-2">
+                <nop-label asp-for="LastVisitedPage" />
+            </div>
+            <div class="col-md-10">
+                <div class="form-text-row">@Model.LastVisitedPage</div>
+            </div>
+        </div>
+    }
+
+</div>
+
+<nop-alert asp-alert-id="statesAlert" asp-alert-message="@T("Admin.Common.Alert.States.Failed")" />
+<script>
+    function toggleIcon(e) {
+        $(e.target)
+            .prev('.panel-heading')
+            .find(".more-less")
+            .toggleClass('glyphicon-plus glyphicon-minus');
+    }
+    $('.panel-group').on('hidden.bs.collapse', toggleIcon);
+    $('.panel-group').on('shown.bs.collapse', toggleIcon);
+</script>
+<script>
+    $(document).ready(function () {
+        var BasicSalary = $("#@Html.IdFor(model => model.BasicSalary)");
+        var commissionPercentage = $("#@Html.IdFor(model => model.CommissionPercentage)");
+        var TeamMemberOfSaleman = $("#@Html.IdFor(model => model.TeamMemberOfSaleman)");
+        var ReportTo = $("#@Html.IdFor(model => model.ReportingTo)");
+
+        var readURL = function (input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                    $('.profile-pic').attr('src', e.target.result);
+                }
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        // On Load to cover edit cases
+        function applyRoleAttributes() {
+
+            $(".tabs.secondary:contains(\"Edit group\")").remove()
+            $('#SelectedCustomerRoleIds_taglist li').each(function () {
+                if (($(this).text().toLowerCase().indexOf('manager') > -1) || ($(this).text().toLowerCase().indexOf('administrator') > -1) || ($(this).text().toLowerCase().indexOf('vendor') > -1)) {
+                    $(BasicSalary).val('');
+                    $(BasicSalary).attr("disabled", "disabled");
+                    $(commissionPercentage).val(0.0);
+                    $(commissionPercentage).attr("disabled", "disabled");
+                    $(TeamMemberOfSaleman).prop('selectedIndex', 0);
+                    $(TeamMemberOfSaleman).attr("disabled", "disabled");
+                    $(ReportTo).prop('selectedIndex', 0);
+                    $(ReportTo).attr("disabled", "disabled");
+                }
+                else if ($(this).text().toLowerCase().indexOf('saleman') > -1) {
+                    $(BasicSalary).removeAttr("disabled");
+                    $(commissionPercentage).removeAttr("disabled");
+                    $(ReportTo).removeAttr("disabled");
+                    $(TeamMemberOfSaleman).prop('selectedIndex', 0);
+                    $(TeamMemberOfSaleman).attr("disabled", "disabled");
+                }
+                else if ($(this).text().toLowerCase().indexOf('customer') > -1) {
+
+                    $(BasicSalary).val('');
+                    $(BasicSalary).attr("disabled", "disabled");
+                    $(commissionPercentage).val(0.0);
+                    $(commissionPercentage).attr("disabled", "disabled");
+                    // $(TeamMemberOfSaleman).prop('selectedIndex', -1);
+                    $(TeamMemberOfSaleman).removeAttr("disabled");
+                    $(ReportTo).prop('selectedIndex', 0);
+                    $(ReportTo).attr("disabled", "disabled");
+
+                }
+            });
+
+        }
+        function performRoleValidation() {
+
+            // Reset All before
+            $(BasicSalary).val('');
+            $(commissionPercentage).val(0.0);
+            $(TeamMemberOfSaleman).prop('selectedIndex', 0);
+            $(ReportTo).prop('selectedIndex', 0);
+            // Perform validation
+            var isManager = false, isSaleman = false, isCustomer = false;
+            $(".tabs.secondary:contains(\"Edit group\")").remove()
+            $('#SelectedCustomerRoleIds_taglist li').each(function () {
+                if ($(this).text().toLowerCase().indexOf('manager') > -1) {
+                    isManager = true
+                }
+                else if ($(this).text().toLowerCase().indexOf('saleman') > -1) {
+                    isSaleman = true;
+                }
+                else if ($(this).text().toLowerCase().indexOf('customer') > -1) {
+                    isCustomer = true
+                }
+                if ((isManager && isSaleman) || (isManager && isCustomer) || (isSaleman && isCustomer)) {
+                    alert("Team formation is not correct");
+                    $(this).remove();
+                }
+            });
+
+
+
+        }
+        // Apply Role & Input Attributes
+        applyRoleAttributes();
+        // On Selection
+        $('#SelectedCustomerRoleIds_taglist').on('DOMSubtreeModified', function (event) {
+            performRoleValidation();
+            applyRoleAttributes();
+        });
+
+        $(".file-upload").on('change', function () {
+            readURL(this);
+        });
+
+        $(".upload-button").on('click', function () {
+            $(".file-upload").click();
+        });
+    });
+</script>

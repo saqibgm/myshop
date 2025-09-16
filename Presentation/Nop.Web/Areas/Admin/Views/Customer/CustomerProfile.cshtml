@@ -1,0 +1,291 @@
+﻿@model CustomerProfileSearchModel
+
+@using System.Globalization;
+@using Nop.Core.Domain.Media
+
+@inject MediaSettings _mediaSettings
+
+@{
+    //page title
+    ViewBag.Title = T("admin.customers.salemanprofile").Text;
+    //active menu item (system name)
+    // Html.SetActiveMenuItemSystemName("Customers Profile");
+}
+
+@{
+    const string hideSearchBlockAttributeName = "CustomerListPage.HideSearchBlock";
+    var hideSearchBlock = genericAttributeService.GetAttribute<bool>(workContext.CurrentCustomer, hideSearchBlockAttributeName);
+}
+<style>
+
+    .customerpic {
+        width: 100px;
+        height: 100px;
+        float: left;
+        margin-top: 5%;
+    }
+
+    .supervisorpic {
+        width: 100px;
+        height: 100px;
+        float: left;
+        margin-top: 5%;
+    }
+
+    .detail {
+        width: 60%;
+        height: 180px;
+        float: right;
+        margin-top: 3% !important;
+        margin-right: 11%;
+    }
+
+    .conditionsdetail {
+        width: 100%;
+        height: 180px;
+    }
+
+    .personaldata {
+        border: groove;
+    }
+
+    .lbl {
+        border-bottom: 1px solid;
+        border-bottom-color: #ccc !important;
+        /*margin: 1% 0 1% 3%;*/
+    }
+
+    h5 {
+        font-weight: bold;
+        margin: 5% 0 5% 0;
+    }
+
+    .accessoriesName {
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .picture-src {
+        border-radius: 50%;
+    }
+
+    .lblvalue {
+        font-size: 12px;
+        font-weight: 500;
+        margin-left: 1% !important;
+    }
+
+    .Salestructure {
+        height: 100px !important;
+    }
+</style>
+<form asp-controller="Customer" asp-action="CustomerProfile" method="post">
+    @*<div class="content-header clearfix">
+            <h1 class="pull-left">
+                @T("admin.customers.csutomerprofile.MyProfile")
+            </h1>
+        </div>*@
+</form>
+<div class="content">
+    <div class=" col-md-12">
+        <input type="hidden" id="SalemanId" name="SalemanId" value="@Model.SalemanId" />
+        <div class="col-md-6">
+            <h3>@T("admin.customers.csutomerprofile.MyProfile")</h3>
+            <div class="customerpic">
+                @if (string.IsNullOrWhiteSpace(Model.Avator))
+                {
+                    <img src="~/images/NoImage.png" class="picture-src" id="wizardPicturePreview" alt="No Picture" title="No Picture" />
+                }
+                else
+                {
+                    <img src="@Model.Avator" class="picture-src" id="wizardPicturePreview" alt="Saleman" title="Saleman" />
+                }
+
+            </div>
+            <div class="panel panel-default">
+                <div class="detail" style="height: 230px">
+                    <div class="lbl">
+                        <label class="accessoriesName">@T("admin.customers.csutomerprofile.SurName"):</label>
+                        <label class="lblvalue">@Model.SurName</label>
+                    </div>
+                    <div class="lbl">
+                        <label class="accessoriesName">@T("admin.customers.csutomerprofile.SID"):</label>
+                        <label class="lblvalue">@Model.SID</label>
+                    </div>
+                    <div class="lbl">
+                        <label class="accessoriesName">@T("admin.customers.csutomerprofile.Email"):</label>
+                        <label class="lblvalue">@Model.Email</label>
+                    </div>
+                    <div class="lbl">
+                        <label class="accessoriesName">@T("admin.customers.csutomerprofile.Phone"):</label>
+                        <label class="lblvalue">@Model.Phone</label>
+                    </div>
+                    <div class="lbl">
+                        <label class="accessoriesName">@T("admin.customers.csutomerprofile.Mobile"):</label>
+                        <label class="lblvalue">@Model.Mobile</label>
+                    </div>
+                    <div class="lbl">
+                        <label class="accessoriesName">@T("admin.customers.csutomerprofile.BasicSalary"):</label>
+                        <label class="lblvalue">@Model.BasicSalary</label>
+                    </div>
+                    <div class="lbl">
+                        <label class="accessoriesName">@T("Admin.Saleman.Commission.CommissionMinTargert"):</label>
+                        <label class="lblvalue">@Model.CommissionMinTargert</label>
+                    </div>
+                    <div class="lbl">
+                        <label class="accessoriesName">@T("admin.customers.csutomerprofile.CommissionRatio"):</label>
+                        <label class="lblvalue">@Model.CommissionPercentage</label>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="superviser  col-md-6">
+            <h3>@T("admin.customers.csutomerprofile.MyManagerProfile")</h3>
+            <div class="supervisorpic">
+                @if (Model.AvatorMngr == string.Empty || Model.AvatorMngr == null)
+                {
+
+                    <img src="~/images/NoImage.png" class="picture-src" id="wizardPicturePreview" alt="No Picture" title="No Picture" />
+                }
+                else
+                {
+                    <img src="@Model.AvatorMngr" class="picture-src" id="wizardPicturePreview" alt="Manager" title="Manager" />
+                }
+
+            </div>
+
+            <div class="panel panel-default">
+                <div class="detail">
+                    <div class="lbl">
+                        <label class="accessoriesName">@T("admin.customers.csutomerprofile.SurName"):</label>
+                        <label class="lblvalue">@Model.SurNameMngr</label>
+                    </div>
+                    <div class="lbl">
+                        <label class="accessoriesName">@T("admin.customers.csutomerprofile.SID"):</label>
+                        <label class="lblvalue">@Model.SIDMngr</label>
+                    </div>
+                    <div class="lbl">
+                        <label class="accessoriesName">@T("admin.customers.csutomerprofile.Email"):</label>
+                        <label class="lblvalue">@Model.EmailMngr</label>
+                    </div>
+                    <div class="lbl">
+                        <label class="accessoriesName">@T("admin.customers.csutomerprofile.Phone"):</label>
+                        <label class="lblvalue">@Model.PhoneMngr</label>
+                    </div>
+                    <div class="lbl">
+                        <label class="accessoriesName">@T("admin.customers.csutomerprofile.Mobile"):</label>
+                        <label class="lblvalue">@Model.MobileMngr</label>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default col-md-12" style="min-height:35px !important;"><p style="vertical-align:middle;text-align:center;"><span><i class='fa fa-arrow-circle-down' style='font-size:48px;color:#3c8dbc'></i> </span></p></div>
+    </div>
+
+    @*<div class="panel panel-default" style="min-height:20px"></div>*@
+    <div class="panel panel-default" style="margin-top:1%;">
+        <div class="panel-body">
+            @await Html.PartialAsync("Table", new DataTablesModel
+       {
+           Name = "commission-grid",
+           UrlRead = new DataUrl("SalemanCommissionList", "Customer", new RouteValueDictionary { [nameof(@Model.SalemanId)] = @Model.SalemanId }),
+           Length = 50,
+           LengthMenu = "",
+           ColumnCollection = new List<ColumnProperty>
+           {
+           new ColumnProperty(nameof(CustomerCommissionModel.CommissionMonthStr))
+           {
+               Title = T("Admin.Saleman.Commission.CommissionMonth").Text,
+               Width = "100"
+           },
+           new ColumnProperty(nameof(CustomerCommissionModel.TotalOrders))
+           {
+               Title = T("Admin.Saleman.Commission.TotalOrders").Text,
+               Width = "100"
+           },
+           new ColumnProperty(nameof(CustomerCommissionModel.TotalSaleStr))
+           {
+               Title = T("Admin.Saleman.Commission.TotalSale").Text,
+               Width = "100",
+               Render = new RenderCustom("renderColumnOrderStatus")
+           },
+           new ColumnProperty(nameof(CustomerCommissionModel.TotalProfitStr))
+           {
+               Title = T("Admin.Saleman.Commission.TotalProfit").Text,
+               Width = "100"
+           },
+           new ColumnProperty(nameof(CustomerCommissionModel.BasicSalary))
+           {
+               Title = T("Admin.Saleman.Commission.BasicSalary").Text,
+               Width = "100"
+           },
+           new ColumnProperty(nameof(CustomerCommissionModel.CommissionPercentage))
+           {
+               Title = T("Admin.Saleman.Commission.CommissionPercentage").Text,
+               Width = "100"
+           },
+           new ColumnProperty(nameof(CustomerCommissionModel.CommissionMinTargertStr))
+           {
+               Title = T("Admin.Saleman.Commission.CommissionMinTargert").Text,
+               Width = "100"
+           },
+           new ColumnProperty(nameof(CustomerCommissionModel.TotalCommissionStr))
+           {
+               Title = T("Admin.Saleman.Commission.TotalCommission").Text,
+               Width = "100"
+           },
+           new ColumnProperty(nameof(CustomerCommissionModel.TotalSalaryStr))
+           {
+               Title = T("Admin.Saleman.Commission.TotalSalary").Text,
+               Width = "100"
+           },
+           //new ColumnProperty(nameof(CustomerCommissionModel.Id))
+           //{
+           //    Title = T("Admin.Saleman.Commission.ReCalculate").Text,
+           //    Width = "50",
+           //    //ClassName = "fa fa-refresh",
+           //    ClassName = NopColumnClassDefaults.Button,
+           //    //Render = new RenderButtonCustom("fa fa-refresh","","/Admin/Customer/ReCalcCommission/") ,
+           //    Render = new RenderCustom("renderRefresh")
+           //    //new DataUrl("~/Admin/Customer/ReCalcCommission/"))
+           //}
+       }
+       });
+            <script>
+                function renderColumnOrderStatus(data, type, row, meta) {
+                    var color;
+                    switch (row.OrderStatusId) {
+                        case 10: color = 'yellow'; break;
+                        case 20: color = 'blue'; break;
+                        case 30: color = 'green'; break;
+                        case 40: color = 'red'; break;
+                    }
+                    return '<span class="grid-report-item ' + color + '">' + data + '</span >';
+                }
+
+                function renderRefresh(data, type, row, meta) {
+                    var btn = "";
+                    if (new Date(row.CommissionMonth).getFullYear() == new Date().getFullYear() && new Date(row.CommissionMonth).getMonth() + 1 >= new Date().getMonth()) {
+                        btn = "<a class='fa fa-refresh' href='/Admin/Customer/ReCalcCommission/" + data + "'></a>";
+                    }
+                    return btn;
+                }
+            </script>
+        </div>
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+

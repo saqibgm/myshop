@@ -1,0 +1,7 @@
+﻿@model ProductDetailsModel
+<div class="availability">
+    <div class="stock">
+        <span class="label">@T("Products.ArticleNo"):</span>
+        <span class="value" id="products-articleno-value-@Model.Id">@(Model.Id+10000) </span>
+    </div>
+</div>

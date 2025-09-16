@@ -1,0 +1,75 @@
+﻿@model CustomerProfileSearchModel
+@{
+    Layout = "_ColumnsTwo";
+
+    //title
+    Html.AddTitleParts(T("PageTitle.Account").Text);
+    //page class
+    Html.AppendPageCssClassParts("html-account-page");
+    Html.AppendPageCssClassParts("html-contact-info-page");
+}
+
+@section left
+    {
+    @await Component.InvokeAsync("CustomerNavigation", new { selectedTabId = CustomerNavigationEnum.ContactInfo })
+}
+<style>
+    .customerpic {
+        width: 150px;
+        height: 150px;
+        float: left;
+        margin-top: 5%;
+    }
+
+    .picture-src {
+        border-radius: 50%;
+        width: 100%;
+        height: 100%;
+    }
+</style>
+<div class="page account-page customer-contact-info-page">
+    <div class="page-title">
+        <h1>@T("Account.MyAccount") - @T("Account.CustomerContactInfo")</h1>
+    </div>
+    <div class="page-body">
+        <div class="fieldset">
+            <div class="title">
+                <strong>@T("Account.YourContactPerson")</strong>
+            </div>
+        </div>
+        <div class="form-fields">
+            <div class="inputs">
+                <div class="customerpic">
+                    @if (string.IsNullOrEmpty(Model.Avator))
+                    {
+                        <img src="~/images/NoImage.png" class="picture-src" id="wizardPicturePreview" alt="No Picture" title="No Picture" />
+                    }
+                    else
+                    {
+                        <img src="@Model.Avator" class="picture-src" id="wizardPicturePreview" alt="Saleman" title="Saleman" />
+                    }
+
+                </div>
+            </div>
+            <div class="inputs">
+                <label>@Model.SurName</label>
+            </div>
+            <div class="inputs">
+                <label>@T("admin.customers.csutomerprofile.Email"): &ensp;<span style="font-weight:normal">@Model.Email</span></label>
+            </div>
+            <div class="inputs">
+                <label>@T("admin.customers.csutomerprofile.Phone"): &ensp;<span style="font-weight:normal">@Model.Phone</span></label>
+            </div>
+            <div class="inputs">
+                <label>
+                    <img src="~/images/mobile.png" width="20" style="vertical-align:bottom;" />&nbsp;<img src="~/images/whatsapp.png" width="20" style="vertical-align:bottom;" />&nbsp;<img src="~/images/telegram.png" width="20" style="vertical-align:bottom;" />: &ensp;<span style="font-weight:normal">@Model.Mobile</span>
+                </label>
+            </div>
+            <div class="inputs">
+                <label>
+                    <img src="~/images/skype.png" width="20" style="vertical-align:bottom;" />: &ensp;<span style="font-weight:normal">@Model.SkypeId</span>
+                </label>
+            </div>
+        </div>
+    </div>
+</div>

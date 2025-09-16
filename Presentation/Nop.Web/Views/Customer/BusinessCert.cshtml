@@ -1,0 +1,59 @@
+﻿@model CustomerBusinessCertModel
+@{
+    Layout = "_ColumnsTwo";
+
+    //title
+    Html.AddTitleParts(T("PageTitle.Account").Text);
+    //page class
+    Html.AppendPageCssClassParts("html-account-page");
+    Html.AppendPageCssClassParts("html-business-cert-page");
+}
+@section left
+    {
+    @await Component.InvokeAsync("CustomerNavigation", new { selectedTabId = CustomerNavigationEnum.BusinessCert })
+}
+<script asp-location="Footer">
+    $(document).ready(function () {
+        $('#upload-business-cert').on('click', function (e) {
+            if ($("#uploadedFile").get(0).files.length === 0) {
+                e.preventDefault();
+            }
+        });
+    });
+</script>
+<form asp-route="CustomerBusinessCert" method="post" enctype="multipart/form-data">
+
+    <div class="page account-page business-cert-page">
+        <div class="page-title">
+            <h1>@T("Account.MyAccount") - @T("Account.BusinessCert")</h1>
+        </div>
+        <div class="page-body">
+            <div asp-validation-summary="ModelOnly" class="message-error"></div>
+            <div class="fieldset">
+                @if (!string.IsNullOrEmpty(Model.BusinessCertUrl))
+                {
+                    <div class="">
+                        <a href="@(Model.BusinessCertUrl)" class="download-uploaded-file">@T("Common.FileUploader.DownloadUploadedFile")</a>
+                    </div>
+                    @*else if(!Model.IsCustomer){*@
+                    <div class="buttons">
+                        <input type="submit" name="remove-business-cert" class="button-2 remove-business-cert-button" value="@T("Account.BusinessCert.Remove")" />
+                    </div>
+                    @*  }*@
+                }
+                else
+                {
+                    <input name="uploadedFile" id="uploadedFile" type="file" />
+                    <div class="info">
+                        @T("Account.BusinessCert.UploadRules")
+                    </div>
+                    <div class="buttons">
+                        <input type="submit" id="upload-business-cert" name="upload-business-cert" class="button-1 upload-business-cert-button" value="@T("Common.Upload")" />
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+</form>
+

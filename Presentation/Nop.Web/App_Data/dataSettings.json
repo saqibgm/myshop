@@ -1,0 +1,9 @@
+﻿{
+  "DataProvider": "sqlserver",
+  "DataConnectionString": "Data Source=Laptop-SI\\SQLEXPRESS;Initial Catalog=createld_shop;Integrated Security=False;Persist Security Info=False;User ID=sa;Password=12345;TrustServerCertificate=True;",
+  //"DataConnectionString": "Data Source=HP-SI\\SQLEXPRESS02;Initial Catalog=createld_shop;Integrated Security=False;Persist Security Info=False;User ID=sa;Password=12345;TrustServerCertificate=True;",
+  //"DataConnectionString": "Data Source=sql6009.site4now.net;Initial Catalog=DB_A5E420_Createl;User ID=DB_A5E420_Createl_admin;Password=ABC123acs;Connection Timeout=900;TrustServerCertificate=True;",
+  //"DataConnectionString": "Data Source=sql6009.site4now.net;Initial Catalog=DB_A5E420_Createl;User ID=DB_A5E420_Createl_admin;Password=ABC123acs;Connection Timeout=900;TrustServerCertificate=True;",
+  //"DataConnectionString": "Data Source=173.248.172.98,1533;Initial Catalog=createld_shop;User ID=createl;Password=W63*m1xc;Connection Timeout=900;TrustServerCertificate=True;",
+  "RawDataSettings": {}
+}

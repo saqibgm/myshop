@@ -1,0 +1,424 @@
+﻿@model ProductSearchModel
+
+@inject IWorkContext workContext;
+@using Nop.Core.Domain.Customers;
+@using Nop.Core.Domain.Catalog;
+
+@{
+    //page title
+    ViewBag.Title = T("Admin.Catalog.BulkUpdateProducts").Text;
+    //active menu item (system name)
+    Html.SetActiveMenuItemSystemName("Bulk Update Products");
+    var currentCustomer = workContext.CurrentCustomer;
+}
+
+@{
+    const string hideSearchBlockAttributeName = "ProductListPage.HideSearchBlock";
+    var hideSearchBlock = genericAttributeService.GetAttribute<bool>(workContext.CurrentCustomer, hideSearchBlockAttributeName);
+    var showStockReserved = currentCustomer.IsAdmin() || currentCustomer.IsCataloguer();
+}
+
+<style>
+    .ktb input[type="number"] {
+        width: 60px;
+    }
+
+    /*.userinput{
+            width:85% !important;
+        }*/
+    .table > tbody > tr > td.button-column .btn {
+        margin-top: 1px;
+        margin-bottom: 1px;
+        padding: 5px 5px;
+    }
+</style>
+<form asp-controller="Product" asp-action="List" method="post">
+    <div class="content-header clearfix">
+        <h1 class="pull-left">
+            @T("Admin.Catalog.BulkUpdateProducts")
+        </h1>
+        <div class="pull-right">
+            @await Component.InvokeAsync("AdminWidget", new { widgetZone = AdminWidgetZones.ProductListButtons })
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="form-horizontal">
+            <div class="panel-group">
+                <div class="panel panel-default panel-search">
+                    <div class="panel-body">
+                        <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                            <div class="search-text">@T("Admin.Common.Search")</div>
+                            <div class="icon-search"><i class="fa fa-search" aria-hidden="true"></i></div>
+                            <div class="icon-collapse"><i class="fa fa-angle-down" aria-hidden="true"></i></div>
+                        </div>
+
+                        <div class="search-body @(hideSearchBlock ? "closed" : "")">
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <div class="form-group">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchProductName" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchProductName" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group" @(Model.AvailableCategories.SelectionIsNotPossible() ? Html.Raw("style=\"display:none\"") : null)>
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchCategoryId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchCategoryId" asp-items="Model.AvailableCategories" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group" @(Model.AvailableCategories.SelectionIsNotPossible() ? Html.Raw("style=\"display:none\"") : null)>
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchIncludeSubCategories" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="SearchIncludeSubCategories" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group" @(Model.AvailableManufacturers.SelectionIsNotPossible() ? Html.Raw("style=\"display:none\"") : null)>
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchManufacturerId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchManufacturerId" asp-items="Model.AvailableManufacturers" />
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="col-md-7">
+                                    <div class="form-group" @(Model.HideStoresList ? Html.Raw("style=\"display:none\"") : null)>
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchStoreId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchStoreId" asp-items="Model.AvailableStores" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group" @(Model.AvailableWarehouses.SelectionIsNotPossible() ? Html.Raw("style=\"display:none\"") : null)>
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchWarehouseId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchWarehouseId" asp-items="Model.AvailableWarehouses" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchProductTypeId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchProductTypeId" asp-items="Model.AvailableProductTypes" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchNewStockComingId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchNewStockComingId" asp-items="Model.AvailableNewStockComingOptions" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchPublishedId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchPublishedId" asp-items="Model.AvailablePublishedOptions" />
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group" @(Model.AvailableVendors.SelectionIsNotPossible() || Model.IsLoggedInAsVendor ? Html.Raw("style='display: none;'") : null)>
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="SearchVendorId" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-select asp-for="SearchVendorId" asp-items="Model.AvailableVendors" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-7 col-md-offset-5">
+                                    <button type="button" id="search-BulkStockproducts" class="btn btn-primary btn-search">
+                                        <i class="fa fa-search"></i>
+                                        @T("Admin.Common.Search")
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        @await Html.PartialAsync("Table", new DataTablesModel
+                   {
+                       Name = "products-grid",
+                       UrlRead = new DataUrl("ProductBulkStockUpdateList", "Product", null),
+                       UrlUpdate = new DataUrl("BulkStockUpdate", "Product", null),
+                       SearchButtonId = "search-BulkStockproducts",
+                       Length = Model.PageSize,
+                       LengthMenu = Model.AvailablePageSizes,
+                       Filters = new List<FilterParameter>
+                                        {
+                            new FilterParameter(nameof(Model.SearchProductName)),
+                            new FilterParameter(nameof(Model.SearchCategoryId)),
+                            new FilterParameter(nameof(Model.SearchIncludeSubCategories), typeof(bool)),
+                            new FilterParameter(nameof(Model.SearchManufacturerId)),
+                            new FilterParameter(nameof(Model.SearchStoreId)),
+                            new FilterParameter(nameof(Model.SearchWarehouseId)),
+                            new FilterParameter(nameof(Model.SearchVendorId)),
+                            new FilterParameter(nameof(Model.SearchProductTypeId)),
+                            new FilterParameter(nameof(Model.SearchNewStockComingId)),
+                            new FilterParameter(nameof(Model.SearchPublishedId))
+                            },
+                       ColumnCollection = new List<ColumnProperty>
+                            {
+                               new ColumnProperty(nameof(ProductModel.PictureThumbnailUrl))
+                                {
+                                    Title = T("Admin.Catalog.Products.Fields.PictureThumbnailUrl").Text,
+                                    Width = "6%",
+                                    Render = new RenderPicture()
+                                },
+                                new ColumnProperty(nameof(ProductModel.Name))
+                                {
+                                    Title = T("Admin.Catalog.Products.Fields.Name").Text,
+                                        Width = "20%",
+                                        Render = new RenderCustom("renderColumnName")
+                                    },
+                                    new ColumnProperty(nameof(ProductModel.WarehousePosition))
+                                    {
+                                        Title = T("Admin.Catalog.Products.Fields.WarehousePosition").Text,
+                                        Width = "6%",
+                                        ClassName = NopColumnClassDefaults.CenterAll,
+                                        Editable = true,
+                                        EditType = EditType.String
+                                    },
+                                    new ColumnProperty(nameof(ProductModel.Sku))
+                                    {
+                                        Title = T("Admin.Catalog.Products.Fields.Sku").Text,
+                                        Width = "8%",
+                                         ClassName = NopColumnClassDefaults.CenterAll
+                                    },
+                                //new ColumnProperty(nameof(ProductModel.ProductTypeName))
+                                //{
+                                //    Title = T("Admin.Catalog.Products.Fields.ProductType").Text,
+                                //    Width = "100"
+                                //},
+                                new ColumnProperty(nameof(ProductModel.Price))
+                                {
+                                    Title = T("Admin.Catalog.Products.Fields.Price").Text,
+                                    Width = "4%",
+                                    ClassName = NopColumnClassDefaults.CenterAll + " ktb",
+                                    Render = new RenderCustom("renderColumnPrice"),
+                                    Editable = true,
+                                    EditType = EditType.String
+                                },
+                                new ColumnProperty(nameof(ProductModel.ProductCost))
+                                {
+                                    Title = T("Admin.Catalog.Products.Fields.ProductCost").Text,
+                                    Width = "4%",
+                                    ClassName = NopColumnClassDefaults.CenterAll + " ktb",
+                                    Render = new RenderCustom("renderColumnPrice"),
+                                    Editable = true,
+                                    EditType = EditType.String
+                                },
+                                new ColumnProperty(nameof(ProductModel.MinPrice))
+                                {
+                                    Title = T("Admin.Catalog.Products.Fields.MinPrice").Text,
+                                    Width = "4%",
+                                    ClassName = NopColumnClassDefaults.CenterAll + " ktb",
+                                    Render = new RenderCustom("renderColumnPrice"),
+                                    Editable = true,
+                                    EditType = EditType.String
+                                },
+                                new ColumnProperty(nameof(ProductModel.TierPriceA))
+                                {
+                                    Title = T("admin.catalog.products.tierprices.A").Text,
+                                    Width = "4%",
+                                    ClassName = NopColumnClassDefaults.CenterAll + " ktb",
+                                    Render = new RenderCustom("renderColumnPrice"),
+                                    Editable = true,
+                                    EditType = EditType.String
+                                },
+                                new ColumnProperty(nameof(ProductModel.TierPriceB))
+                                {
+                                    Title = T("admin.catalog.products.tierprices.B").Text,
+                                    Width = "4%",
+                                    ClassName = NopColumnClassDefaults.CenterAll + " ktb",
+                                    Render = new RenderCustom("renderColumnPrice"),
+                                    Editable = true,
+                                    EditType = EditType.String
+                                },
+                                new ColumnProperty(nameof(ProductModel.TierPriceC))
+                                {
+                                    Title = T("admin.catalog.products.tierprices.C").Text,
+                                    Width = "4%",
+                                    ClassName = NopColumnClassDefaults.CenterAll + " ktb",
+                                    Render = new RenderCustom("renderColumnPrice"),
+                                    Editable = true,
+                                    EditType = EditType.String
+                                },
+                                new ColumnProperty(nameof(ProductModel.NewStockComing))
+                                {
+                                    Title = T("Admin.Catalog.Products.Fields.NewStockComing").Text,
+                                    Render = new RenderCustom("renderColumnNewStockComing"),
+                                    Width = "5%",
+                                    ClassName = NopColumnClassDefaults.CenterAll + " ktb",
+                                    Editable = true,
+                                    EditType = EditType.String
+                                },
+                                new ColumnProperty(nameof(ProductModel.StockReserved))
+                                {
+                                    Title = T("Admin.Catalog.Products.Fields.StockReserved").Text,
+                                    ClassName = NopColumnClassDefaults.CenterAll,
+                                    Width = "5%",
+                                    Visible= showStockReserved
+                                },
+                                new ColumnProperty(nameof(ProductModel.StockQuantityStr))
+                                {
+                                    Title = T("Admin.Catalog.BulkUpdate.CurrentStock").Text,
+                                    ClassName = NopColumnClassDefaults.CenterAll,
+                                    Width = "5%"
+                                },
+                                
+                                new ColumnProperty(nameof(ProductModel.NewStockQuantity))
+                                {
+                                    Title = T("Admin.Catalog.BulkUpdate.NewStock").Text,
+                                    Render = new RenderCustom("renderColumnNewStock"),
+                                    Width = "5%",
+                                    ClassName = NopColumnClassDefaults.CenterAll + " ktb",
+                                    Editable = true,
+                                    EditType = EditType.String
+                                },
+                                
+                                new ColumnProperty(nameof(ProductModel.Published))
+                                {
+                                    Title = T("Admin.Catalog.Products.Fields.Published").Text,
+                                    Render = new RenderBoolean(),
+                                    Width = "4%",
+                                    ClassName = NopColumnClassDefaults.CenterAll + " ktb",
+                                    Editable = true,
+                                    EditType = EditType.Checkbox
+                                },
+                                new ColumnProperty(nameof(ProductModel.Id))
+                                {
+                                    Title = T("Admin.Common.Edit").Text,
+                                    Width = "5%",
+                                    ClassName = NopColumnClassDefaults.Button,
+                                    Render = new RenderButtonsInlineEdit()
+                                }
+                            }
+                   })
+
+                        <script>
+                            function renderColumnPrice(data, type, row, meta) {
+                                return (row.ProductTypeId != @((int)ProductType.GroupedProduct) ) ? toComma(data) : null;
+                            }
+                            function renderColumnNewStock(data, type, row, meta) {
+                                return row.StockQuantityStr;
+                            }
+                            function renderColumnNewStockComing(data, type, row, meta) {
+                                //var newStockComing = (row.NewStockComing == null || row.NewStockComing <= 0) ? "<span class='fa fa-close false-icon'></span>" : row.NewStockComing;
+                                return row.NewStockComing;
+                            }
+
+                            function renderColumnName(data, type, row, meta) {
+                                var categoriesText = GetCategoriesText(row.SelectedCategoryIds);
+                                return row.Name + "<div class='cate-list'> <span id='divCategories_" + row.Id + "' >" + categoriesText + " </span>&nbsp; " +
+                                    "<input type='hidden' id='hidCategoriesIDs_" + row.Id+"' value='" + row.SelectedCategoryIds+"' />"+
+                                    "<button id='binAddCategory_" + row.Id + "' onclick = 'ShowCategories(" + row.Id + ");' type = 'button' >±︁</button ></div > ";
+                            }
+                            function GetCategoriesText(IDs) {
+                                var categoryArray = @Html.Raw(Json.Serialize(Model.AvailableCategories));
+                                var categoryIDs = IDs.toString().split(',');
+                                var categoryNames = categoryArray.filter(item => categoryIDs.includes(item.Value)).map(x => x.Text);
+                                return categoryNames.join(' | ');
+                            }
+                            $("#btnLink").click(function () {
+
+                            })
+
+                            $(document).ready(function () {
+                                var stringArray = @Html.Raw(Json.Serialize(Model.AvailableCategories));
+                                $("#SelectedCategoryIds").kendoMultiSelect({
+                                    dataSource: stringArray,
+                                    dataTextField: 'Text',
+                                    dataValueField: 'Value',
+                                });
+                             });
+
+
+                            function SaveCategories(id) {
+                                var multi = $("#SelectedCategoryIds").getKendoMultiSelect(),
+                                    categoryList = multi.dataItems();
+                                var categoryNames = categoryList.map(function (categoty) {
+                                    return categoty['Text'];
+                                });
+                                var newCategoryIDs = categoryList.map(function (categoty) {
+                                    return categoty['Value'];
+                                });
+
+                                $.ajax({
+                                    cache: false,
+                                    type: 'GET',
+                                    traditional: true,
+                                    data: { id: id, categoryIds: newCategoryIDs},
+                                    url: "@Html.Raw(Url.Action("UpdateCategories", "Product", null))",
+                                    dataType: 'json',
+                                    success: function (result) {
+                                        $("#hidCategoriesIDs_" + id).val(newCategoryIDs.join(","))
+                                        $("#divCategories_" + id).text(categoryNames.join(" | "));
+                                        $('#ModalPopUpCategory').modal('hide');
+                                    },
+                                    error: function (result) {
+                                        $('#ModalPopUpCategory').modal('hide');
+                                    },
+                                });
+                            }
+
+                            function ShowCategories(id) {
+                                var categoryIDs = $("#hidCategoriesIDs_" + id).val();
+                                $('#ModalPopUpCategory').modal('show');
+                                $("#SelectedCategoryIds").getKendoMultiSelect().value(categoryIDs.split(','));
+                                $('#btnSaveCategories').unbind('click');
+                                $("#btnSaveCategories").click(
+                                    function () {
+                                            SaveCategories(id, $("#SelectedCategoryIds").val());
+                                    }
+                                );
+                            }
+                        </script>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<div class="modal" id="ModalPopUpCategory" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 style="float:left" class="modal-title" id="importcsv-window-title">@T("Admin.Catalog.Categories")</h4>
+            </div>
+            <div class="form-horizontal">
+                <div class="modal-body" style="height:150px">
+                    <div style="position:fixed;bottom:5px;float:right">
+                        <span class="btn btn-default left" data-dismiss="modal">@T("Admin.Common.NoCancel")</span>&nbsp;
+                        <button type="submit" id="btnSaveCategories" class="btn bg-primary pull-right">
+                            @T("Admin.Common.Save")
+                        </button>
+                    </div>
+
+                    <select id="SelectedCategoryIds" multiple="multiple" asp-items="Model.AvailableCategories" style="max-height:120px" /><button>TEst</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

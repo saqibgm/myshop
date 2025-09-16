@@ -1,0 +1,128 @@
+﻿@model CustomerProducts
+@using Nop.Core.Domain.Catalog
+
+@{
+    Layout = "_ColumnsTwo";
+
+    //title
+    Html.AddTitleParts(T("PageTitle.Account").Text);
+    //page class
+    Html.AppendPageCssClassParts("html-account-page");
+    Html.AppendPageCssClassParts("html-product-list-page");
+    Html.AppendScriptParts("~/lib/bootstrap/js/bootstrap.min.js");
+    Html.AppendCssFileParts("~/lib/bootstrap/css/bootstrap.min.css");
+    Html.AppendScriptParts("~/lib/bootstrap-touchspin/jquery.bootstrap-touchspin.min.js");
+    Html.AppendScriptParts($"~/lib/datatables/js/dataTables.bootstrap.min.js");
+}
+@section left
+    {
+    @await Component.InvokeAsync("CustomerNavigation", new { selectedTabId = CustomerNavigationEnum.Products })
+}
+<style>
+    .prodhead {
+        background-color: gray;
+        font-weight: bold;
+        max-width: 97%;
+        margin-left: 20px;
+    }
+
+        .prodhead div {
+            padding: 5px;
+        }
+
+    .proditem {
+        max-width: 97%;
+        margin-left: 20px;
+    }
+
+        .proditem div {
+            padding: 5px;
+        }
+
+    div.irows > div:nth-of-type(even) {
+        background-color: #dcdcdc;
+    }
+</style>
+<div class="page account-page product-list-page">
+    <div class="page-title">
+        <h1>@T("Account.MyAccount") - @T("Account.CustomerProducts")</h1>
+    </div>
+    <div class="page-body">
+            @if (Model.ProductList.Count > 0)
+            {
+                <div class="product-list">
+                    <div class="row prodhead">
+                        <div class="col-md-1">
+                            @T("Account.CustomerProducts.Picture")
+                        </div>
+                        <div class="col-md-3">
+                            @T("Account.CustomerProducts.ProductName")
+                        </div>
+                        <div class="col-md-2">
+                            @T("Account.CustomerProducts.SKU")
+                        </div>
+                        <div class="col-md-2">
+                            @T("Account.CustomerProducts.TotalOrders")
+                        </div>
+                        <div class="col-md-2">
+                            @T("Account.CustomerProducts.TotalProducts")
+                        </div>
+                        <div class="col-md-1">
+                            @T("Account.CustomerProducts.LastOrder")
+                        </div>
+                        <div class="col-md-1">
+                            @T("Account.CustomerProducts.LastPrice")
+                        </div>
+                    </div>
+                    <div class="irows">
+                        @foreach (var product in Model.ProductList)
+                        {
+                        <div class="row proditem">
+                            <div class="col-md-1">
+                                <img src="@product.PictureURL" width="36" />
+                            </div>
+                            <div class="col-md-3">
+                                @product.ProductName
+                            </div>
+                            <div class="col-md-2">
+                                @product.Sku
+                            </div>
+                            <div class="col-md-2">
+                                @product.OrderCount
+                            </div>
+                            <div class="col-md-2">
+                                @product.Quantity
+                            </div>
+                            <div class="col-md-1">
+                                @product.LastOrderOn.ToShortDateString()
+                            </div>
+                            <div class="col-md-1">
+                                @product.LastPrice.ToString("0.00")
+                            </div>
+                        </div>
+
+                        @*<div class="form-fields">
+        <div class="title">
+            <strong>@T("Account.CustomerOrders.OrderNumber"): @product.ProductName</strong>
+        </div>
+        <ul class="info">
+            <li><img src="@product.PictureURL" /></li>
+            <li>@T("Account.CustomerOrders.OrderStatus"): <span class="order-status @product.Id">@product.Id</span></li>
+            <li>@T("Account.CustomerOrders.PaymentStatus"): <span class="payment-status @product.Quantity">@product.Quantity</span></li>
+            <li>@T("Account.CustomerOrders.OrderDate"): <span class="order-date">@product.LastOrderOn.ToString()</span>@product.LastOrderOn.ToShortDateString()</li>
+            <li>@T("Account.CustomerOrders.OrderTotal"): <span class="order-total">@product.LastPrice</span></li>
+        </ul>
+    </div>*@
+/**/
+                                                }
+                        </div>
+                </div>
+            }
+            else
+            {
+                <div class="no-data">
+                    @T("Account.CustomerProducts.NoProducts")
+                </div>
+            }
+    </div>
+</div>

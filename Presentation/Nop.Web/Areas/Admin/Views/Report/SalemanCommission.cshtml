@@ -1,0 +1,216 @@
+﻿@model SalemanCommissionReportSearchModel
+
+@{
+    //page title
+    ViewBag.Title = T("Admin.Reports.SalemanCommissionReport").Text;
+    //active menu item (system name)
+    Html.SetActiveMenuItemSystemName("Saleman Commission");
+}
+
+@{
+    const string hideSearchBlockAttributeName = "CountrySalesPage.HideSearchBlock";
+    var hideSearchBlock = genericAttributeService.GetAttribute<bool>(workContext.CurrentCustomer, hideSearchBlockAttributeName);
+}
+
+<nop-antiforgery-token />
+<div class="content-header clearfix">
+    <h1 class="pull-left">
+        @T("Admin.Reports.SalemanCommissionReport")
+    </h1>
+    <div class="pull-right">
+        &nbsp;
+    </div>
+</div>
+
+<div class="content">
+    <div class="form-horizontal">
+        <div class="panel-group">
+            <div class="panel panel-default panel-search">
+                <div class="panel-body">
+                    <div class="row search-row @(!hideSearchBlock ? "opened" : "")" data-hideAttribute="@hideSearchBlockAttributeName">
+                        <div class="search-text">@T("Admin.Common.Search")</div>
+                        <div class="icon-search"><i class="fa fa-search" aria-hidden="true"></i></div>
+                        <div class="icon-collapse"><i class="fa fa-angle-down" aria-hidden="true"></i></div>
+                    </div>
+
+                    <div class="search-body @(hideSearchBlock ? "closed" : "")">
+
+                        <div class="row col-md-12">
+                            <div class="form-group row col-md-6">
+                                <div class="col-md-4">
+                                    <nop-label asp-for="SalemanId" />
+                                </div>
+                                <div class="col-md-8">
+                                    <nop-select asp-for="SalemanId" asp-items="Model.SalemanList" />
+                                </div>
+                            </div>
+                            @*<div class="form-group col-md-6">
+                                    <div class="col-md-4">
+                                        <nop-label asp-for="SearchKeyword" />
+                                    </div>
+                                    <div class="col-md-8">
+                                        <nop-editor asp-for="SearchKeyword" />
+                                        <span asp-validation-for="SearchKeyword"></span>
+                                    </div>
+                                </div>*@
+
+                            <div class="row col-md-6 form-group">
+                                <div class="col-md-4">
+                                    <nop-label asp-for="PaymentStatusId" />
+                                </div>
+                                <div class="col-md-8">
+                                    <nop-select asp-for="PaymentStatusId" asp-items="Model.AvailablePaymentStatuses" />
+                                </div>
+                            </div>
+
+
+                        </div>
+                        @*<div class="row col-md-12">
+                                    <div class="form-group col-md-6">
+                                        <div class="col-md-4">
+                                            <nop-label asp-for="InvoiceAmount" />
+                                        </div>
+                                        <div class="col-md-8">
+                                            <nop-editor asp-for="InvoiceAmount" />
+                                            <span asp-validation-for="InvoiceAmount"></span>
+                                        </div>
+                                    </div>
+                                <div class="row col-md-6">
+                                    <div class="col-md-4">
+                                        <nop-label asp-for="ProductId" />
+                                    </div>
+                                    <div class="col-md-8">
+                                        <input type="text" id="search-product-name" autocomplete="off" class="form-control" />
+                                        <span id="search-product-friendly-name"></span>
+                                        <button type="button" id="search-product-clear" class="btn bg-gray" style="display: none; margin-top: 5px;">@T("Admin.Common.Clear")</button>
+                                        <input asp-for="ProductId" autocomplete="off" style="display: none;" />
+                                        <script>
+                                                $(document).ready(function() {
+                                                    $('#search-product-name').autocomplete({
+                                                        delay: 500,
+                                                        minLength: 3,
+                                                        source: '@(Url.Action("ProductSearchAutoComplete"))',
+                                                        select: function(event, ui) {
+                                                            $('#@Html.IdFor(model => model.ProductId)').val(ui.item.productid);
+                                                            $('#search-product-friendly-name').text(ui.item.label);
+
+                                                            $('#search-product-clear').show();
+                                                            return false;
+                                                        }
+                                                    });
+
+                                                    //remove button
+                                                    $('#search-product-clear').click(function() {
+                                                        $('#@Html.IdFor(model => model.ProductId)').val('0');
+                                                        $('#search-product-friendly-name').text('');
+                                                        $('#search-product-clear').hide();
+                                                        return false;
+                                                    });
+                                                });
+                                        </script>
+                                    </div>
+                                </div>
+                            </div>*@
+
+                        <div class="row col-md-12">
+                            <div class="row col-md-6 form-group">
+                                <div class="col-md-4">
+                                    <nop-label asp-for="StartDate" />
+                                </div>
+                                <div class="col-md-8">
+                                    <nop-editor asp-for="StartDate" />
+                                </div>
+                            </div>
+                            <div class="row col-md-6 form-group">
+                                <div class="col-md-4">
+                                    <nop-label asp-for="OrderStatusId" />
+                                </div>
+                                <div class="col-md-8">
+                                    <nop-select asp-for="OrderStatusId" asp-items="Model.AvailableOrderStatuses" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row col-md-12">
+
+                            <div class="row col-md-6 form-group">
+                                <div class="col-md-4">
+                                    <nop-label asp-for="EndDate" />
+                                </div>
+                                <div class="col-md-8">
+                                    <nop-editor asp-for="EndDate" />
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-7 col-md-offset-5">
+                                <button type="button" id="search-commissionreport" class="btn btn-primary btn-search">
+                                    <i class="fa fa-line-chart"></i>
+                                    @T("Admin.Reports.Sales.Country.RunReport")
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    @await Html.PartialAsync("Table", new DataTablesModel
+               {
+                   Name = "commissionreport-grid",
+                   UrlRead = new DataUrl("SalemanCommissionList", "Report", null),
+                   SearchButtonId = "search-commissionreport",
+                   Length = Model.PageSize,
+                   LengthMenu = Model.AvailablePageSizes,
+                   Filters = new List<FilterParameter>
+                        {
+                            new FilterParameter(nameof(Model.StartDate)),
+                            new FilterParameter(nameof(Model.EndDate)),
+                            new FilterParameter(nameof(Model.OrderStatusId)),
+                            new FilterParameter(nameof(Model.PaymentStatusId)),
+                             //new FilterParameter(nameof(Model.ProductId)),
+                             // new FilterParameter(nameof(Model.InvoiceAmount)),
+                               new FilterParameter(nameof(Model.SearchKeyword)),
+                               new FilterParameter(nameof(Model.SalemanId))
+
+
+                        },
+                   ColumnCollection = new List<ColumnProperty>
+                        {
+                            new ColumnProperty(nameof(SalemanCommissionReportModel.SalemanName))
+                            {
+                                Title = T("Admin.Reports.SalemanCommission.Fields.Saleman").Text
+                            },
+                            //new ColumnProperty(nameof(SalemanCommissionReportModel.Date))
+                            //{
+                            //    Title = T("Admin.Reports.SalemanCommission.Fields.Date").Text
+                            //},
+                            new ColumnProperty(nameof(SalemanCommissionReportModel.TotalOrders))
+                            {
+                                Title = T("Admin.Reports.SalemanCommission.Fields.OrdersCount").Text
+                            },
+                            new ColumnProperty(nameof(SalemanCommissionReportModel.TotalSaleAmount))
+                            {
+                                Title = T("Admin.Reports.SalemanCommission.Fields.SaleAmount").Text
+                            },
+                           new ColumnProperty(nameof(SalemanCommissionReportModel.TotalProfit))
+                            {
+                                Title = T("Admin.Reports.SalemanCommission.Fields.TotalProfit").Text
+                            },
+                             new ColumnProperty(nameof(SalemanCommissionReportModel.CommissionAmount))
+                            {
+                                Title = T("Admin.Reports.SalemanCommission.Fields.CommissionAmount").Text
+                            },
+                            //  new ColumnProperty(nameof(SalemanCommissionReportModel.TotalSalemanSalaryIncCommission))
+                            //{
+                            //    Title = T("Admin.Reports.SalemanCommission.Fields.TotalSalemanSalaryIncCommission").Text
+                            //}
+                        }
+               })
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
